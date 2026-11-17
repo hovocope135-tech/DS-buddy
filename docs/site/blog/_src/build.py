@@ -199,7 +199,7 @@ def convert(md, lang, rel=""):
 # ---------------------------------------------------------------- page
 UI = {"zh": dict(lang="zh-CN", post="介绍", deep="工程架构", guide="使用说明", toc="目录", date="2026/11/16", theme="切换深浅色", by="DS-buddy"),
       "en": dict(lang="en", post="Introduction", deep="Architecture", guide="Guide", toc="On this page", date="16 Nov 2026", theme="Toggle theme", by="DS-buddy")}
-SITE = "https://dkkd13.github.io/DS-buddy/site/blog/"   # where the pages are served; change it if the repository is renamed
+SITE = "https://hovocope135-tech.github.io/DS-buddy/site/blog/"   # where the pages are served; change it if the repository is renamed
 MARK = '<svg class="mark" viewBox="0 0 30 30" aria-hidden="true"><path d="M5 5h20v6h-7v14h-6V11H5z"/></svg>'
 def page(lang, title, dek, body, toc, rel, sub, kicker="", desc=""):
     """rel: path from this page back to the site root; sub: "" for the launch post, "deep/" for the teardown."""
@@ -231,7 +231,7 @@ def page(lang, title, dek, body, toc, rel, sub, kicker="", desc=""):
 <div class="page{"" if toc else " notoc"}">
 <aside class="side">
   <a class="brand" href="{here(base)}"><span>DS-buddy</span></a>
-  <nav>{nav}<a href="https://github.com/DKKD13/DS-buddy">GitHub</a></nav>
+  <nav>{nav}<a href="https://github.com/hovocope135-tech/DS-buddy">GitHub</a></nav>
 </aside>
 <main>
   <div class="bar">

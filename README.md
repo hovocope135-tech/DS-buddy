@@ -27,7 +27,7 @@
 **装上。** 需要 DeepSeek Harness（在 0.2.1 上测过）和 Node 24 以上。没装过 DeepSeek Harness 的话，先 `npm install -g @deepseek-ai/dsh`。
 
 ```sh
-git clone https://github.com/DKKD13/DS-buddy
+git clone https://github.com/hovocope135-tech/DS-buddy
 cd DS-buddy/plugin
 dsh plugin --profile web add "$(pwd)"    # 把插件装进 DeepSeek Harness
 dsh --profile web                        # 启动，在浏览器里打开它给的地址
@@ -73,9 +73,9 @@ Claude Code 和 Codex 当执行者时不弹权限确认，也没有沙箱，你�
 
 ## 详细内容
 
-- [介绍（完整版）](https://dkkd13.github.io/DS-buddy/site/blog/)：这篇介绍的长版本
-- [工程架构](https://dkkd13.github.io/DS-buddy/site/blog/deep/)：它是怎么搭起来的
-- [产品页](https://dkkd13.github.io/DS-buddy/site/)、[演示片](https://github.com/DKKD13/DS-buddy/releases/latest/download/tacit-film.mp4)
+- [介绍（完整版）](https://hovocope135-tech.github.io/DS-buddy/site/blog/)：这篇介绍的长版本
+- [工程架构](https://hovocope135-tech.github.io/DS-buddy/site/blog/deep/)：它是怎么搭起来的
+- [产品页](https://hovocope135-tech.github.io/DS-buddy/site/)、[演示片](https://github.com/hovocope135-tech/DS-buddy/releases/latest/download/tacit-film.mp4)
 - [上手指南](docs/GETTING-STARTED.md)、[功能介绍](docs/FEATURES.md)、[测试报告](docs/TESTING.md)
 
 ## 现在到哪一步了

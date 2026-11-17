@@ -163,4 +163,4 @@ Looking back, what DS-buddy does fits in one sentence: remove the agent layer, o
 
 The assistant that is always there is called Tacit by default, after tacit knowledge: what can't quite be put into words and keeps working anyway. I want it to know the background of a job before the user opens their mouth.
 
-DS-buddy is an open-source plugin for DeepSeek Harness. The code is on [GitHub](https://github.com/DKKD13/DS-buddy), under the MIT license.
+DS-buddy is an open-source plugin for DeepSeek Harness. The code is on [GitHub](https://github.com/hovocope135-tech/DS-buddy), under the MIT license.

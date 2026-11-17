@@ -29,7 +29,7 @@ The interface is in Chinese for now.
 **Install.** You need DeepSeek Harness (tested on 0.2.1) and Node 24 or later. If you do not have DeepSeek Harness yet: `npm install -g @deepseek-ai/dsh`.
 
 ```sh
-git clone https://github.com/DKKD13/DS-buddy
+git clone https://github.com/hovocope135-tech/DS-buddy
 cd DS-buddy/plugin
 dsh plugin --profile web add "$(pwd)"    # add the plugin to DeepSeek Harness
 dsh --profile web                        # start it and open the address it prints
@@ -75,9 +75,9 @@ It doesn't send messages in your name. Without a word from you it makes no decis
 
 ## More
 
-- [Introduction, full version](https://dkkd13.github.io/DS-buddy/site/blog/en/): the long version of this introduction
-- [Architecture](https://dkkd13.github.io/DS-buddy/site/blog/en/deep/): how it is built
-- [Product page](https://dkkd13.github.io/DS-buddy/site/), [film](https://github.com/DKKD13/DS-buddy/releases/latest/download/tacit-film.mp4)
+- [Introduction, full version](https://hovocope135-tech.github.io/DS-buddy/site/blog/en/): the long version of this introduction
+- [Architecture](https://hovocope135-tech.github.io/DS-buddy/site/blog/en/deep/): how it is built
+- [Product page](https://hovocope135-tech.github.io/DS-buddy/site/), [film](https://github.com/hovocope135-tech/DS-buddy/releases/latest/download/tacit-film.mp4)
 - [Getting started](docs/GETTING-STARTED.md), [features](docs/FEATURES.md) and [test report](docs/TESTING.md) (Chinese)
 
 ## Where it stands

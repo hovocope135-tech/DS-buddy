@@ -163,4 +163,4 @@ DS-buddy 里具体有三条规则：
 
 里面那个一直在的助理默认叫 Tacit，取 tacit knowledge（默会知识）的意思：说不清，却一直在起作用。我希望它在用户开口之前，就已经了解和这件事有关的上下文。
 
-DS-buddy 是 DeepSeek Harness 的一个开源插件，代码在 [GitHub](https://github.com/DKKD13/DS-buddy)，MIT 许可。
+DS-buddy 是 DeepSeek Harness 的一个开源插件，代码在 [GitHub](https://github.com/hovocope135-tech/DS-buddy)，MIT 许可。

@@ -131,5 +131,5 @@
 - Raft 官网：https://raft.build
 - Raft 博客：https://raft.build/resources/blog/is-having-agents-in-the-room-meant-to-be-chaotic/
 - Genspark 发布报道（VentureBeat）：https://venturebeat.com/business/gensparks-super-agent-ups-the-ante-in-the-general-ai-agent-race
-- DS-buddy 产品页（线上）：https://dkkd13.github.io/DS-buddy/site/
-- DS-buddy 发布文（线上）：https://dkkd13.github.io/DS-buddy/site/blog/ ，英文 https://dkkd13.github.io/DS-buddy/site/blog/en/ ，拆解长文 https://dkkd13.github.io/DS-buddy/site/blog/deep/
+- DS-buddy 产品页（线上）：https://hovocope135-tech.github.io/DS-buddy/site/
+- DS-buddy 发布文（线上）：https://hovocope135-tech.github.io/DS-buddy/site/blog/ ，英文 https://hovocope135-tech.github.io/DS-buddy/site/blog/en/ ，拆解长文 https://hovocope135-tech.github.io/DS-buddy/site/blog/deep/

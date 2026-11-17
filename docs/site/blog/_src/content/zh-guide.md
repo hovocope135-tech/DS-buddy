@@ -8,7 +8,7 @@ DS-buddy 里你主要打交道的是两样东西：个人助理 Tacit，和一�
 需要 DeepSeek Harness 0.2.x 和 Node 24 以上。没装过 DeepSeek Harness 的话，先 `npm install -g @deepseek-ai/dsh`。
 
 ```
-git clone https://github.com/DKKD13/DS-buddy
+git clone https://github.com/hovocope135-tech/DS-buddy
 cd DS-buddy/plugin
 dsh plugin --profile web add "$(pwd)"
 dsh --profile web
