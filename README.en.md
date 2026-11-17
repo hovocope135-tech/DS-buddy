@@ -6,19 +6,33 @@
 
 For the past six months I have kept running into the same kind of tiredness: the models keep getting stronger, and my own output hasn't kept up. Most of my day goes into switching between a few conversation windows, carrying one side's output over and filling in what the other side missed. Somewhere along the way I became the glue between AIs, with no time left to think the direction through.
 
-The problem isn't that AI isn't smart enough. The bandwidth between people and AI is too narrow. I built DS-buddy to try a new way of interacting that brings that friction down.
+The problem isn't that AI isn't smart enough. It's that the bandwidth between people and AI is too limited. I built DS-buddy to explore a new way of interacting, one that takes this needless layer of friction out of working with AI.
 
-**Most of the time, you don't need multiple agents. Managing agents is, at heart, managing context.** Many products put the way human teams are organised straight onto AI: a pile of agents, roles, channels, tickets. It looks busy, but it is still a simulated meeting room, with a human division of labour covering up context that has been split apart. To a model, a fork shares and multiple agents pass things along. Whatever is passed along loses something. Rather than having agents message each other, fork the subtasks from one complete context. For most complex problems, that is enough.
+Here are the core principles we built DS-buddy on:
 
-**The key to using AI well is to split the work into a structure that can be verified and has a clear goal: one goal and one loop at a time.** Without role play to divide the work, what needs maintaining is the tasks themselves. In DS-buddy the assistant keeps a set of task files (goals): what the goal is, what counts as done and where the context lives are all written down. Every core thread has a stable context; add automations that run on a schedule, and everyday work turns into loops that run without anyone watching.
+**Most of the time, you don't need multiple agents. Managing agents is, at heart, managing context.**
 
-**We don't need the concept of an agent. The runtime details and the dynamic, fragmented state should stay hidden.** I would go further: the agent itself is a needless middle layer. In products like Multica, you configure Skills and runtimes for your agents before any work starts. But tools and environments are just task context; they should grow as the project needs them, not be fixed in advance. So DS-buddy keeps the fragmented runtime state underneath and exposes only the model. Every extra layer of agent is one more thing to keep in your head. The one thing you need to care about is a sentence per project on which models to prefer.
+Many products put the way human teams are organised straight onto AI: a pile of agents, roles, channels, tickets. It looks busy, but it is still a simulated meeting room, with a human division of labour covering up context that has been split apart. To a model, a fork shares and multiple agents pass things along. Whatever is passed along loses something. Rather than having agents message each other, fork the subtasks from one complete context. For most complex problems, that is enough.
 
-**You can do without the agent abstraction, but every runtime should stay visible.** Hiding concepts doesn't mean building a black box. When tasks run on their own in the background, people need something to rely on. So while it takes away the agent abstraction, DS-buddy gives every run a clear view: when the assistant was woken and by what, which tools it called in order, and how it turned out, all in the developer view.
+**Build context around goals (loops).**
 
-**Take in as much context as possible, use the best model to assign the work, then let the AI explore.** Building this product has also meant slowly letting go of control. I believe more and more that enough context and room to explore beat any amount of prompt polishing. DS-buddy turns what you do on your computer into a timeline and hands it to the model as background; what the model is unsure about lands on a board called Waiting on you. You make the calls at the key points, and it finds the rest of the way.
+The key to using AI well is to split the work into a structure that can be verified and has a clear goal: one goal and one loop at a time. Without role play to divide the work, what needs maintaining is the tasks themselves. In DS-buddy the assistant keeps a set of task files (goals): what the goal is, what counts as done and where the context lives are all written down. Every core thread has a stable context; add automations that run on a schedule, and everyday work turns into loops that run without anyone watching.
 
-**A small suggestion: give the personal assistant the best model you can.** The personal assistant, the coordinator, does the work that takes the most judgement: understanding what you mean and breaking vague ideas into tasks of the right size. If that first split goes wrong, no speed afterwards will save it. So give it the best model you can use, such as Claude Opus 5.5 or GPT-6 Astra. Put your best tool where it counts.
+**We don't need the concept of an agent. The runtime details and the dynamic, fragmented state should stay hidden.**
+
+I would go further: the agent itself is a needless middle layer. In products like Multica, you configure Skills and runtimes for your agents before any work starts. But tools and environments are just task context; they should grow as the project needs them, not be fixed in advance. So DS-buddy keeps the fragmented runtime state underneath and exposes only the model. Every extra layer of agent is one more thing to keep in your head. The one thing you need to care about is a sentence per project on which models to prefer.
+
+**You can do without the agent abstraction, but every runtime should stay visible.**
+
+Hiding concepts doesn't mean building a black box. When tasks run on their own in the background, people need something to rely on. So while it takes away the agent abstraction, DS-buddy gives every run a clear view: when the assistant was woken and by what, which tools it called in order, and how it turned out, all in the developer view.
+
+**Take in as much context as possible, use the best model to assign the work, then let the AI explore.**
+
+Building this product has also meant slowly letting go of control. I believe more and more that enough context and room to explore beat any amount of prompt polishing. DS-buddy turns what you do on your computer into a timeline and hands it to the model as background; what the model is unsure about lands on a board called Waiting on you. You make the calls at the key points, and it finds the rest of the way.
+
+**A small suggestion: give the personal assistant the best model you can.**
+
+The personal assistant, the coordinator, does the work that takes the most judgement: understanding what you mean and breaking vague ideas into tasks of the right size. If that first split goes wrong, no speed afterwards will save it. So give it the best model you can use, such as Claude Opus 5.5 or GPT-6 Astra. Put your best tool where it counts.
 
 Install it and try.
 
