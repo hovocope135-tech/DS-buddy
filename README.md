@@ -42,7 +42,7 @@ https://github.com/user-attachments/assets/beab0a8e-4ffb-4a50-93f4-6d63dc568de4
 
 [演示片 tacit-film.mp4（1.0 发布版）](https://github.com/hovocope135-tech/DSH-projects/releases/download/v1.0.0/tacit-film.mp4)
 
-![DSH-projects 上手：建项目，说一句目标，没说清的先问你，交付直接预览，在「待你决定」里拍板](docs/readme/onboarding.gif)
+![对个人助理说一句目标：它建好项目，拆成两个任务，一分钟后第一份交付回来（真实录屏，只剪掉了等待）](docs/readme/assistant-flow.gif)
 
 ## 使用说明
 
@@ -59,7 +59,7 @@ dsh --profile web                        # 启动，在浏览器里打开它给�
 
 **交代一件事。** 新建一个项目，可以给它一个文件夹，执行者就在里面干活。在项目对话里用一句话讲清：做什么，上下文在哪，标准是什么。项目助理先开工能开的，再问你没说清的。
 
-![交代一件事：能开的先开工，没说清的先问你](docs/readme/shot-clarify.png)
+![交代一件事：项目助理拆成任务，做完向你汇报](docs/readme/shot-project.png)
 
 点开任务，能看到它的全部上下文：你的原话、怎么算完成、产出、读过的文件、进展。
 
@@ -69,7 +69,7 @@ dsh --profile web                        # 启动，在浏览器里打开它给�
 
 卡片上没有按钮。点任务卡打开任务，交付的网页、图片、文档直接预览，满意就验收，不满意就写清楚改什么。点消息卡，一句完整的请求会写进输入框，你改完再发。
 
-![待你决定：等你验收的任务都汇总在这里](docs/readme/shot-board.png)
+![待你决定：等你验收的任务，和 Tacit 夜里留下的建议](docs/readme/shot-board.png)
 
 ![交付直接预览：网页渲染出来，满意就验收通过](docs/readme/shot-delivery.png)
 
