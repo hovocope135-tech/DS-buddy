@@ -24,7 +24,7 @@
 
 ## 演示
 
-<video src="https://github.com/hovocope135-tech/DS-buddy/releases/download/v1.0.0/tacit-film.mp4" controls muted playsinline></video>
+https://github.com/user-attachments/assets/beab0a8e-4ffb-4a50-93f4-6d63dc568de4
 
 [演示片 tacit-film.mp4（1.0 发布版）](https://github.com/hovocope135-tech/DS-buddy/releases/download/v1.0.0/tacit-film.mp4)
 
