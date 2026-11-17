@@ -7,11 +7,11 @@ Over the past year, single-task agents have shown that a model can use tools to 
 
 Most multi-agent products, though, organise work the way a human team does: agents get names and roles, and channels, tickets and @-mentions connect them. The user is left in the middle: A's conclusion has to be copied to B, the background B needs has to be told again, and someone has to watch who has finished and who is stuck. How well one job goes depends on the model; how many jobs can move at once depends on a person's attention.
 
-The early version of DS-buddy worked that way too. Every project was a group chat, and a project assistant created roles as needed, each with a name, a persona of a sentence or two and an avatar of its own. By 12 November, 18 roles had been created across 12 projects. In the code, though, a role contributed only three things: a name, a persona and a default model. Sessions were opened per task, not per role. What the model saw each time was the context of the job; the role was a label stuck on top.
+The early version of DSH-projects worked that way too. Every project was a group chat, and a project assistant created roles as needed, each with a name, a persona of a sentence or two and an avatar of its own. By 12 November, 18 roles had been created across 12 projects. In the code, though, a role contributed only three things: a name, a persona and a default model. Sessions were opened per task, not per role. What the model saw each time was the context of the job; the role was a label stuck on top.
 
 So I removed the role layer. A project now has one executor, and the interface shows the model it runs on. The judgment behind it: an agent is a piece of context plus a model, and managing agents is managing context. The design question becomes: for each model call, what does the model see, who maintains that context, and what does it cost to assemble?
 
-Around that question, DS-buddy has five goals:
+Around that question, DSH-projects has five goals:
 
 - **Verbatim**: what the user says reaches the working model word for word, with no paraphrase in between.
 - **Isolated**: each job has its own context and doesn't carry the history of other jobs.
@@ -21,7 +21,7 @@ Around that question, DS-buddy has five goals:
 
 The figure below shows the overall structure. The context pack is section 2, assembly and caching section 3, collection section 4, and the board section 5.
 
-{{fig:tacit|The overall structure of DS-buddy. Blue is the context layer. Each job runs on a fork of it, results come back to Waiting on you, and every action of the user is written back to the context layer.}}
+{{fig:tacit|The overall structure of DSH-projects. Blue is the context layer. Each job runs on a fork of it, results come back to Waiting on you, and every action of the user is written back to the context layer.}}
 
 ## 2. The context pack
 
@@ -32,7 +32,7 @@ The context of a job should be both clean and verbatim. The two common approache
 
 {{fig:inherit|How much of the parent conversation a subagent inherits. Placed qualitatively from each project's source; a project that appears twice has two modes.}}
 
-DS-buddy takes both halves: a separate context for each job, with the words in it unchanged. This context is the context pack. It is organised per task (thread) and has four parts:
+DSH-projects takes both halves: a separate context for each job, with the words in it unchanged. This context is the context pack. It is organised per task (thread) and has four parts:
 
 - **Goal and background**: the description the project assistant writes when it opens the task.
 - **The user's own words**: the message cited when the task was opened, passed to the executor by the server as written.
@@ -65,7 +65,7 @@ The executor is a DeepSeek Harness session by default and can be switched to Cla
 
 Every time an executor is woken, its context has to be assembled again. Model services cache the prefix they have already read: if this prefix matches the last one, the prefill can be reused and costs less; if anything in the prefix changes, everything after it has to be computed again. So the rule for assembling is: what doesn't change goes first, and what changes is only appended at the end.
 
-In DS-buddy this comes down to three rules:
+In DSH-projects this comes down to three rules:
 
 - The role instructions are frozen when a session starts and don't change for the life of the session.
 - New events don't rewrite earlier content. Only a short wake notice is appended at the end: how many unread items are waiting and where from. The model fetches the content itself with a tool, and fetched items count as read.
@@ -79,11 +79,11 @@ The cache reads actually measured are in section 6.
 
 ## 4. Collecting context
 
-For the AI to take over the layer of organising context, it first has to know enough. DS-buddy collects from three sources, all read-only:
+For the AI to take over the layer of organising context, it first has to know enough. DSH-projects collects from three sources, all read-only:
 
 - **Screen**: through Screenpipe on the user's machine, every window seen is read once a minute, text only, at most 3,000 characters per window. Screenshots never leave the machine.
 - **Feishu**: messages are read every 2 minutes.
-- **Files**: a small program on the computer connects out to DS-buddy and reads files on demand. The computer side decides what may be read: chosen folders, or the whole home folder minus Library and hidden folders. Browser cookies, saved logins and similar files are always refused.
+- **Files**: a small program on the computer connects out to DSH-projects and reads files on demand. The computer side decides what may be read: chosen folders, or the whole home folder minus Library and hidden folders. Browser cookies, saved logins and similar files are always refused.
 
 Raw records are written to storage, not into the window. Every 10 minutes a window is cut and handed, with the previous activity and the project list, to one small-model call, which writes 0 to 3 activities in the user's own task wording. An activity gets a project only when it clearly belongs to one; otherwise the field stays empty. Code checks the source of every activity: it must point back to raw records in that window, and anything that can't is dropped. Raw records whose window path lies inside a project's folder are filed under that project by path.
 
@@ -93,13 +93,13 @@ Raw records are written to storage, not into the window. Every 10 minutes a wind
 
 The timeline is read only by the personal assistant, and every entry can be checked against its source with a tool. When the personal assistant hands a job to a project, what goes across is the user's own words; the timeline and memory go along only as references with their sources.
 
-Screen capture itself is nothing new. Screenpipe, AirJelly, Littlebird and the Computer History in Codex all do it, and they mostly stop at recording and search. The extra step in DS-buddy is connecting the collected context to tasks: proposing work from what it observed, handing it to a project, and bringing the result back to the board for the user's call.
+Screen capture itself is nothing new. Screenpipe, AirJelly, Littlebird and the Computer History in Codex all do it, and they mostly stop at recording and search. The extra step in DSH-projects is connecting the collected context to tasks: proposing work from what it observed, handing it to a project, and bringing the result back to the board for the user's call.
 
 ## 5. Interaction with people
 
 ### 5.1 Waiting on you
 
-Once several jobs run in parallel, a person's attention is the bottleneck. DS-buddy gathers what needs the user onto one board across projects, with three lanes: waiting on you, in progress, done today. The first lane holds four kinds of items only: decisions, acceptances, failures, and messages someone is waiting on (a direct message or @-mention in Feishu that has gone unanswered for half an hour).
+Once several jobs run in parallel, a person's attention is the bottleneck. DSH-projects gathers what needs the user onto one board across projects, with three lanes: waiting on you, in progress, done today. The first lane holds four kinds of items only: decisions, acceptances, failures, and messages someone is waiting on (a direct message or @-mention in Feishu that has gone unanswered for half an hour).
 
 Cards have no buttons. Clicking a task card opens the task; clicking a reminder card drafts a sentence in the composer, which the user edits and sends. Every action ends up as a sentence the user says, so it takes the same path as ordinary conversation and the user's own words are kept.
 
@@ -159,8 +159,8 @@ Both kinds of session have dropped over the last three days, and the cause hasn'
 
 ## 8. Closing
 
-Looking back, what DS-buddy does fits in one sentence: remove the agent layer, organise context per task, and have people appear only to make the call and accept the result. Executors can be swapped, models can be swapped, and what stays is the context of each job.
+Looking back, what DSH-projects does fits in one sentence: remove the agent layer, organise context per task, and have people appear only to make the call and accept the result. Executors can be swapped, models can be swapped, and what stays is the context of each job.
 
 The assistant that is always there is called Tacit by default, after tacit knowledge: what can't quite be put into words and keeps working anyway. I want it to know the background of a job before the user opens their mouth.
 
-DS-buddy is an open-source plugin for DeepSeek Harness. The code is on [GitHub](https://github.com/hovocope135-tech/DS-buddy), under the MIT license.
+DSH-projects is an open-source plugin for DeepSeek Harness. The code is on [GitHub](https://github.com/hovocope135-tech/DSH-projects), under the MIT license.

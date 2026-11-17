@@ -3,13 +3,13 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Your next agent product may not need agents | DS-buddy</title>
+<title>Your next agent product may not need agents | DSH-projects</title>
 <meta name="description" content="Exploring the best way for people and AI to work together">
 <meta property="og:type" content="article">
-<meta property="og:site_name" content="DS-buddy">
+<meta property="og:site_name" content="DSH-projects">
 <meta property="og:title" content="Your next agent product may not need agents">
 <meta property="og:description" content="Exploring the best way for people and AI to work together">
-<meta property="og:url" content="https://hovocope135-tech.github.io/DS-buddy/site/blog/en/">
+<meta property="og:url" content="https://hovocope135-tech.github.io/DSH-projects/site/blog/en/">
 <meta name="twitter:card" content="summary">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -20,12 +20,12 @@
 <body>
 <div class="page">
 <aside class="side">
-  <a class="brand" href="../en/"><span>DS-buddy</span></a>
-  <nav><a class="on" href="../en/">Introduction</a><a href="../en/deep/">Architecture</a><a href="../en/guide/">Guide</a><a href="https://github.com/hovocope135-tech/DS-buddy">GitHub</a></nav>
+  <a class="brand" href="../en/"><span>DSH-projects</span></a>
+  <nav><a class="on" href="../en/">Introduction</a><a href="../en/deep/">Architecture</a><a href="../en/guide/">Guide</a><a href="https://github.com/hovocope135-tech/DSH-projects">GitHub</a></nav>
 </aside>
 <main>
   <div class="bar">
-    <a class="brand sm" href="../en/"><span>DS-buddy</span></a>
+    <a class="brand sm" href="../en/"><span>DSH-projects</span></a>
     <span class="sp"></span>
     <button class="theme" type="button" aria-label="Toggle theme" title="Toggle theme"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4.2"/><path d="M12 2.5v2.6M12 18.9v2.6M2.5 12h2.6M18.9 12h2.6M5.3 5.3l1.8 1.8M16.9 16.9l1.8 1.8M5.3 18.7l1.8-1.8M16.9 7.1l1.8-1.8"/></svg></button>
     <span class="langs"><a href="../" lang="zh-CN">中文</a><i>/</i><a href="../en/" class="on" aria-current="page" lang="en">EN</a></span>
@@ -34,10 +34,10 @@
     <header>
       <p class="kick">Notes on building AI products</p>
       <h1>Your next agent product may not need agents</h1>
-      <p class="meta">DS-buddy <i>·</i> 16 Nov 2026</p>
+      <p class="meta">DSH-projects <i>·</i> 16 Nov 2026</p>
       <p class="dek">Exploring the best way for people and AI to work together</p>
     </header>
-<figure class="shot"><a href="../img/rd2-hero.jpg"><img src="../img/rd2-hero.jpg" alt="DS-buddy: the personal assistant Tacit on the left, the Waiting on you board on the right" loading="lazy"></a></figure>
+<figure class="shot"><a href="../img/rd2-hero.jpg"><img src="../img/rd2-hero.jpg" alt="DSH-projects: the personal assistant Tacit on the left, the Waiting on you board on the right" loading="lazy"></a></figure>
 <p>Over the past six months, my strongest impression has been that agents keep getting more capable. On one hand I am amazed at how far AI has come; on the other, my own efficiency has improved only a little, and I often find myself running between several conversations.</p>
 <p>The most central and urgent problem for AI applications today is lowering the bandwidth of communication between people and AI. On one hand, we need a good way to hand context to the AI; on the other, people shouldn't have to spend more of their attention to do it.</p>
 <p>The dilemma we keep facing is that we are run off our feet, playing the role of glue most of the time, carrying context around, and short of real time to think and set the right direction.</p>
@@ -52,7 +52,7 @@
 <p>Managing agents is, at heart, managing context. In a meeting-room style of multi-agent, each agent adds opinions from the point of view of a human job, but the task itself is never organised into a structure that can be delivered, verified and put together. That only moves the human form of organisation onto models, instead of designing the system around what agents can and can't do.</p>
 <h2 id="s2">The answer: context management built around the goal (the loop)</h2>
 <p><strong>Runtimes and sessions are only temporary tools; a vague goal is broken down into AI tasks that can close their own loop.</strong></p>
-<p>AI needs a clear goal and acceptance criteria. For every core thread, the way of working has turned towards the goal, that is, the loop. So the best answer for context has to be designed consciously from the start, rather than refined as the conversation goes on. A task that is really fit to hand to another agent should be like a complete sub-problem that can be delivered on its own. It doesn't have to be big, but it has to be complete. DS-buddy deliberately has an agent maintain the organisation of each task, and offers automated tasks (tasks that run again on a schedule) to help you build your own task loops smoothly.</p>
+<p>AI needs a clear goal and acceptance criteria. For every core thread, the way of working has turned towards the goal, that is, the loop. So the best answer for context has to be designed consciously from the start, rather than refined as the conversation goes on. A task that is really fit to hand to another agent should be like a complete sub-problem that can be delivered on its own. It doesn't have to be big, but it has to be complete. DSH-projects deliberately has an agent maintain the organisation of each task, and offers automated tasks (tasks that run again on a schedule) to help you build your own task loops smoothly.</p>
 <p>For each task, the problem with today's sessions is that most of the valuable context gets buried in the moving conversation. Yet the fixed index of a task is simple. It is usually a clear goal, where the repository is, the acceptance standard, and where the documents are.</p>
 <p>So people only need to say three things clearly: what to do, where the context is, and what the standard is. The AI then breaks that down into a context pack for each task (thread). Think of the pack roughly as a goal file. It is what we really maintain over time, injected each time and updated each time.</p>
 <figure class="shot"><a href="../img/rd2-pack.jpg"><img src="../img/rd2-pack.jpg" alt="A task&#x27;s details page, which is its context pack" loading="lazy"></a></figure>
@@ -61,7 +61,7 @@
 <h2 id="s3">Hide the configuration details: trust the model, offer a board instead of forms, leave the rest to the AI</h2>
 <p>Similar multi-agent products on the market today all expose too much. Multica and Raft offer a good way to organise, through group chats and tickets being passed along, and their underlying abstractions are well made; I borrowed their thinking and the way they are built. But for a person, setting up channels, configuring roles and dividing up the work is hard work in itself.</p>
 <p>The details need wrapping. How the context is assembled, at which layer the cache hits, how tokens are saved: all of this is under the hood and shouldn't be put in front of the user. Wrapping it well also pays off: with the stable part at the front, the model can reuse what it read last time, and a cache hit and a cache miss differ in cost by an order of magnitude.</p>
-<p>So in DS-buddy there are no agents to name and no skills to configure. But how far each job has got, and which model it went to, is always visible: every task has a page of details, and whatever needs you is on one board called Waiting on you.</p>
+<p>So in DSH-projects there are no agents to name and no skills to configure. But how far each job has got, and which model it went to, is always visible: every task has a page of details, and whatever needs you is on one board called Waiting on you.</p>
 <figure class="shot"><a href="../img/rd2-board.jpg"><img src="../img/rd2-board.jpg" alt="The waiting lane of the board, and one task&#x27;s progress and executor" loading="lazy"></a></figure>
 <h2 id="s4">Collecting context fully</h2>
 <p><strong>Freeing people from carrying information around, towards an always-on AI that really understands you.</strong></p>
@@ -70,13 +70,13 @@
 <p>Capturing context automatically isn't new. Screenpipe is the best-known example, along with AirJelly, Littlebird and the Computer History built into Codex, and they have existed for a while. But most of them haven't closed the loop from context to action.</p>
 <figure class="shot"><a href="../img/rd2-recall.jpg"><img src="../img/rd2-recall.jpg" alt="Asking Tacit about a line from an interview: it finds the source in what the screen recorded" loading="lazy"></a></figure>
 <p>I think this is how we will work in future: people express preferences and values and give the key guidance only at the points where they are really needed, instead of being reduced, as today, to carriers of information whose attention suffers. That lets people focus on what really matters.</p>
-<p>The core assistant in DS-buddy is called Tacit by default, meaning tacit understanding. I think a really good buddy should know all the relevant context before you open your mouth.</p>
+<p>The core assistant in DSH-projects is called Tacit by default, meaning tacit understanding. I think a really good buddy should know all the relevant context before you open your mouth.</p>
 <figure class="shot"><a href="../img/rd2-tacit.jpg"><img src="../img/rd2-tacit.jpg" alt="Tacit&#x27;s personality, name and shortcut" loading="lazy"></a></figure>
 <h2 id="s5">The biggest challenge: breaking work down well</h2>
 <p>The biggest problem today is whether the coordinator, the assistant that splits the work, can plan the division and the size of tasks soundly. So we recommend a strong model such as Claude Opus 5.5 or GPT-6 Astra for the personal assistant, the one that sets things up for you, to split tasks as well as possible. As models get smarter and the skills for dividing work get refined, this keeps getting better.</p>
 <figure class="shot"><a href="../img/rd2-models.jpg"><img src="../img/rd2-models.jpg" alt="Which model each assistant uses, on one page" loading="lazy"></a></figure>
 <p>Come and try it.</p>
-<p>DS-buddy: your next agent product may not need agents.</p>
+<p>DSH-projects: your next agent product may not need agents.</p>
 <p>Further reading:</p>
 <ul><li><a href="guide/">Guide</a>: how to work with Tacit</li><li><a href="deep/">Architecture</a>: how it is built</li></ul>
   </article>

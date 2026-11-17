@@ -1,6 +1,6 @@
 # 对标：Manus、Genspark、Raft 怎么做官网和发布文章
 
-2026-11-16 读了三家的官网、发布文章和博客，记下它们的做法，以及 DS-buddy 的落地页和文章各学了哪一条。每条后面是出处，方便你自己去看。同一天产品页和发布文公开之后，又按线上的版本逐项核对了一遍（第三节），DS-buddy 这一列写的都是线上现在能看到的东西。三家那几列也在当天中午重新打开各自的页面核对过：记下的事实大多成立，有五处不对，已经改掉，改了什么写在第五节。
+2026-11-16 读了三家的官网、发布文章和博客，记下它们的做法，以及 DSH-projects 的落地页和文章各学了哪一条。每条后面是出处，方便你自己去看。同一天产品页和发布文公开之后，又按线上的版本逐项核对了一遍（第三节），DSH-projects 这一列写的都是线上现在能看到的东西。三家那几列也在当天中午重新打开各自的页面核对过：记下的事实大多成立，有五处不对，已经改掉，改了什么写在第五节。
 
 ## 一、官网
 
@@ -11,7 +11,7 @@
 - 没有数字、没有客户 logo、没有评价。可信度靠产品本身和页脚的 Trust center。
 - 页脚有一组「Compare」：VS ChatGPT、VS Lovable、VS Replit。导航里有价格页。
 
-**学到的：** 首屏用产品最有代表性的那个动作开场，而不是一段介绍。DS-buddy 的首屏是一句交代的话，下面直接是它变成的看板。
+**学到的：** 首屏用产品最有代表性的那个动作开场，而不是一段介绍。DSH-projects 的首屏是一句交代的话，下面直接是它变成的看板。
 
 ### Raft（raft.build）
 
@@ -20,7 +20,7 @@
 - 「What makes Raft different」下面四节，每节一句小标题加一张界面：Teammates who really know you、Work that finishes itself、Bring the agents you already run、A team that gets smarter together。
 - 然后是七条用户评价（多数是创始人和 CTO，评价里带数字）、团队介绍（人和 agent 混排）、八个常见问题（含和 Slack、OpenClaw、Codex 或 Claude Code 的区别）、收尾按钮「Ready to build?」。导航里有价格、文档、用例。
 
-**学到的：** 页面骨架。标题 + 一句定义 + 两个按钮 + 真界面；一句论点；「有什么不一样」每节一句话一张图；常见问题里直接回答「和谁有什么不同」；结尾再给一次按钮。DS-buddy 的落地页就是这个顺序。评价和团队两节我们现在没有，没有硬凑。
+**学到的：** 页面骨架。标题 + 一句定义 + 两个按钮 + 真界面；一句论点；「有什么不一样」每节一句话一张图；常见问题里直接回答「和谁有什么不同」；结尾再给一次按钮。DSH-projects 的落地页就是这个顺序。评价和团队两节我们现在没有，没有硬凑。
 
 ### Genspark（genspark.ai）
 
@@ -28,7 +28,7 @@
 - 首页是应用式的：一条版本公告「Genspark AI Workspace 6.0」，一句口号「Your all-in-one AI workspace」，一个输入框（「Ask anything, create anything」），旁边是产品目录（AI 队友、媒体工作室、办公套件、构建套件）。页脚是一长串按用途分的工具页，还有一个 Comparisons 入口。首页上没有数字、评价和常见问题。博客没有读。
 - 发布时的打法是演示先行：三个具体场景（五天圣地亚哥行程并电话订餐厅、做菜短视频、动画短片），再给数字（9 个模型、80 多个工具、GAIA 87.8% 对 Manus 的 86%）。
 
-**学到的：** 数字要带比较对象和条件才有说服力。DS-buddy 的页面只放自己量过的四个数，每个都写了条件。
+**学到的：** 数字要带比较对象和条件才有说服力。DSH-projects 的页面只放自己量过的四个数，每个都写了条件。
 
 ## 二、发布文章
 
@@ -52,7 +52,7 @@
 - 十二节编号的教训。有具体数字，也有具体的失败（一个没人看的周末，agent 自己开出 200 多条待办）。
 - 专门有一节「What isn't working yet」，结尾注明哪些数字是估计。
 
-**学到的，用在 DS-buddy 的文章和页面上：**
+**学到的，用在 DSH-projects 的文章和页面上：**
 
 | 做法 | 出处 | 用在哪 |
 | --- | --- | --- |
@@ -71,7 +71,7 @@
 
 官网。
 
-| 项 | Manus | Raft | Genspark | DS-buddy 现在 |
+| 项 | Manus | Raft | Genspark | DSH-projects 现在 |
 | --- | --- | --- | --- | --- |
 | 首屏 | 一句问话、一个输入框、一个介绍片封面 | 标题、一句定义、两个按钮、一段模拟的团队对话 | 一个输入框，旁边是产品目录 | 口号、一句定义、两个按钮；下面是一句交代的话和它变成的看板 |
 | 一句论点 | 「Less structure, more intelligence.」 | 一句引语当论点 | 「Your all-in-one AI workspace」 | 第二屏引语「多 agent 卷了一年，我们决定把 agent 藏起来。」 |
@@ -86,9 +86,9 @@
 
 三家的演示片内容这次都没有播放来看。
 
-发布文章。DS-buddy 一列写的是 11 月 16 日下午重写后的线上版本：一篇短文，加一页单独的拆解长文。
+发布文章。DSH-projects 一列写的是 11 月 16 日下午重写后的线上版本：一篇短文，加一页单独的拆解长文。
 
-| 项 | Manus 2.0 发布文 | Raft 博客 | Manus 工程复盘 | DS-buddy 发布文现在 |
+| 项 | Manus 2.0 发布文 | Raft 博客 | Manus 工程复盘 | DSH-projects 发布文现在 |
 | --- | --- | --- | --- | --- |
 | 篇幅 | 英文约 1000 词 | 约 1600 词 | 英文约 3500 词 | 短文中文约 1800 字、英文约 1350 词；拆解长文约 6500 字 |
 | 开头 | 宣布发布，说这不是一次版本更新 | 一个小场景，第一段末尾给论点 | 一个场景 | 一句宣布开源，一句说这篇讲为什么这么做，然后从别家产品先让你认识 agent 讲起 |
@@ -100,14 +100,14 @@
 
 「没有记到」的意思是：读的时候没有把这一项记下来，不等于对方没有。
 
-## 四、和它们比，DS-buddy 现在差在哪
+## 四、和它们比，DSH-projects 现在差在哪
 
 - **没有外部评价，也没有团队介绍。** Raft 有七条创始人的话，还有一节团队。我们要等第一批用户。
 - **没有独立域名和下载页。** 产品页挂在 GitHub Pages 上，安装从 GitHub 仓库走。
 - **英文不全。** 产品页、README 和发布文有英文；上手指南、功能介绍、测试报告和界面本身只有中文。
 - **页面上的两个用时数字是单次实测。** Manus 的数字来自一个测试配置，Genspark 的带着比较对象；我们的还没有多次的统计。
 - **「带上你已经在用的 agent」还不能全说。** 这在 Raft 是卖点。我们这边 Claude Code 实跑验证过；Codex 用它自己的模型跑通，还没有验证到（见测试报告）。
-- **三家都是独立产品，有价格页、下载或注册入口。** DS-buddy 是 DeepSeek Harness 里的一个插件，入口是 GitHub 仓库和三条安装命令。
+- **三家都是独立产品，有价格页、下载或注册入口。** DSH-projects 是 DeepSeek Harness 里的一个插件，入口是 GitHub 仓库和三条安装命令。
 
 比起这份记录的上一版，已经补上的：演示片有了（85 秒，真实界面）；发布文有了英文版；产品页有了公开网址。
 
@@ -131,5 +131,5 @@
 - Raft 官网：https://raft.build
 - Raft 博客：https://raft.build/resources/blog/is-having-agents-in-the-room-meant-to-be-chaotic/
 - Genspark 发布报道（VentureBeat）：https://venturebeat.com/business/gensparks-super-agent-ups-the-ante-in-the-general-ai-agent-race
-- DS-buddy 产品页（线上）：https://hovocope135-tech.github.io/DS-buddy/site/
-- DS-buddy 发布文（线上）：https://hovocope135-tech.github.io/DS-buddy/site/blog/ ，英文 https://hovocope135-tech.github.io/DS-buddy/site/blog/en/ ，拆解长文 https://hovocope135-tech.github.io/DS-buddy/site/blog/deep/
+- DSH-projects 产品页（线上）：https://hovocope135-tech.github.io/DSH-projects/site/
+- DSH-projects 发布文（线上）：https://hovocope135-tech.github.io/DSH-projects/site/blog/ ，英文 https://hovocope135-tech.github.io/DSH-projects/site/blog/en/ ，拆解长文 https://hovocope135-tech.github.io/DSH-projects/site/blog/deep/

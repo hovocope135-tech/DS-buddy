@@ -18,7 +18,7 @@ L = {
             say="你说的话", screen="屏幕", feishu="飞书", local="电脑里的文件", ctx="上下文层", log="事件日志", tl="时间线",
             memory="记忆", pt="项目 → 任务", t="任务", fork="fork", inbox="待你决定", needs="该你了才找你",
             wb="拍板、验收、要改，都记回去", r1="结果", r2="回到", r3="一处",
-            z1="只有 brief", z2="过滤或压缩后的历史", z3="完整历史", loc="（本地）", rem="（远程 A2A）", dflt="（默认）", tacitrow="DS-buddy：任务说明 + 你的原话 + 项目文件",
+            z1="只有 brief", z2="过滤或压缩后的历史", z3="完整历史", loc="（本地）", rem="（远程 A2A）", dflt="（默认）", tacitrow="DSH-projects：任务说明 + 你的原话 + 项目文件",
             p1="要做什么", p2="上下文在哪", p3="标准是什么", ptitle="任务的上下文包", pr1="目标和背景", pr2="你的原话", pr3="怎么算完成", pr4="进展和产出", pr5="读过的文件",
             prt="执行的 runtime（一次性）", pin="开工时注入", pout="进展写回", pkeep="长期维护", pswap="随时可以换",
             xtitle="一个执行会话的上下文，从前往后", xstable="稳定的前缀：每次唤醒都能命中缓存", xappend="每次唤醒只在末尾追加",
@@ -35,7 +35,7 @@ L = {
             say="What you say", screen="Screen", feishu="Feishu", local="Files on your Mac", ctx="Context layer", log="Event log", tl="Timeline",
             memory="Memory", pt="Project → task", t="Task", fork="fork", inbox="Waiting on you", needs="when it needs you",
             wb="every click is written back", r1="results", r2="come", r3="back",
-            z1="Brief only", z2="Filtered or compressed history", z3="Full history", loc=" (local)", rem=" (remote A2A)", dflt=" (default)", tacitrow="DS-buddy: task brief + your own words + project files",
+            z1="Brief only", z2="Filtered or compressed history", z3="Full history", loc=" (local)", rem=" (remote A2A)", dflt=" (default)", tacitrow="DSH-projects: task brief + your own words + project files",
             p1="What to do", p2="Where context is", p3="The standard", ptitle="The task's context pack", pr1="Goal and background", pr2="Your own words", pr3="What counts as done", pr4="Progress and outputs", pr5="Files read",
             prt="Runtimes (disposable)", pin="injected at start", pout="progress written back", pkeep="maintained over time", pswap="swappable any time",
             xtitle="One executor session's context, start to end", xstable="Stable prefix: a cache hit on every wake", xappend="Each wake appends at the end only",
@@ -197,9 +197,9 @@ def convert(md, lang, rel=""):
     return title, dek, "\n".join(out), toc, kicker
 
 # ---------------------------------------------------------------- page
-UI = {"zh": dict(lang="zh-CN", post="介绍", deep="工程架构", guide="使用说明", toc="目录", date="2026/11/16", theme="切换深浅色", by="DS-buddy"),
-      "en": dict(lang="en", post="Introduction", deep="Architecture", guide="Guide", toc="On this page", date="16 Nov 2026", theme="Toggle theme", by="DS-buddy")}
-SITE = "https://hovocope135-tech.github.io/DS-buddy/site/blog/"   # where the pages are served; change it if the repository is renamed
+UI = {"zh": dict(lang="zh-CN", post="介绍", deep="工程架构", guide="使用说明", toc="目录", date="2026/11/16", theme="切换深浅色", by="DSH-projects"),
+      "en": dict(lang="en", post="Introduction", deep="Architecture", guide="Guide", toc="On this page", date="16 Nov 2026", theme="Toggle theme", by="DSH-projects")}
+SITE = "https://hovocope135-tech.github.io/DSH-projects/site/blog/"   # where the pages are served; change it if the repository is renamed
 MARK = '<svg class="mark" viewBox="0 0 30 30" aria-hidden="true"><path d="M5 5h20v6h-7v14h-6V11H5z"/></svg>'
 def page(lang, title, dek, body, toc, rel, sub, kicker="", desc=""):
     """rel: path from this page back to the site root; sub: "" for the launch post, "deep/" for the teardown."""
@@ -207,7 +207,7 @@ def page(lang, title, dek, body, toc, rel, sub, kicker="", desc=""):
     base = rel + ("en/" if lang == "en" else "")                     # this language's home
     zh_href, en_href = here(rel + sub), rel + "en/" + sub
     url = SITE + ("en/" if lang == "en" else "") + sub
-    share = "".join(f'<meta property="og:{k}" content="{html.escape(v, quote=True)}">\n' for k, v in (("type", "article"), ("site_name", "DS-buddy"), ("title", title), ("description", desc), ("url", url)))
+    share = "".join(f'<meta property="og:{k}" content="{html.escape(v, quote=True)}">\n' for k, v in (("type", "article"), ("site_name", "DSH-projects"), ("title", title), ("description", desc), ("url", url)))
     if lang == "zh": share += f'<meta property="og:image" content="{SITE}img/rd2-hero.jpg">\n<meta name="twitter:card" content="summary_large_image">\n'   # the picture carries Chinese text
     else: share += '<meta name="twitter:card" content="summary">\n'
     ON = ' class="on"'
@@ -219,7 +219,7 @@ def page(lang, title, dek, body, toc, rel, sub, kicker="", desc=""):
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>{html.escape(title)} | DS-buddy</title>
+<title>{html.escape(title)} | DSH-projects</title>
 <meta name="description" content="{html.escape(desc, quote=True)}">
 {share}<link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -230,12 +230,12 @@ def page(lang, title, dek, body, toc, rel, sub, kicker="", desc=""):
 <body>
 <div class="page{"" if toc else " notoc"}">
 <aside class="side">
-  <a class="brand" href="{here(base)}"><span>DS-buddy</span></a>
-  <nav>{nav}<a href="https://github.com/hovocope135-tech/DS-buddy">GitHub</a></nav>
+  <a class="brand" href="{here(base)}"><span>DSH-projects</span></a>
+  <nav>{nav}<a href="https://github.com/hovocope135-tech/DSH-projects">GitHub</a></nav>
 </aside>
 <main>
   <div class="bar">
-    <a class="brand sm" href="{here(base)}"><span>DS-buddy</span></a>
+    <a class="brand sm" href="{here(base)}"><span>DSH-projects</span></a>
     <span class="sp"></span>
     <button class="theme" type="button" aria-label="{u["theme"]}" title="{u["theme"]}"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4.2"/><path d="M12 2.5v2.6M12 18.9v2.6M2.5 12h2.6M18.9 12h2.6M5.3 5.3l1.8 1.8M16.9 16.9l1.8 1.8M5.3 18.7l1.8-1.8M16.9 7.1l1.8-1.8"/></svg></button>
     <span class="langs"><a href="{zh_href}"{' class="on" aria-current="page"' if lang == "zh" else ""} lang="zh-CN">中文</a><i>/</i><a href="{en_href}"{' class="on" aria-current="page"' if lang == "en" else ""} lang="en">EN</a></span>

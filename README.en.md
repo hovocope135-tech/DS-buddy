@@ -1,4 +1,4 @@
-# DS-buddy
+# DSH-projects
 
 **Exploring the best way for people and AI to work together**
 
@@ -6,9 +6,9 @@
 
 For the past six months I have kept running into the same kind of tiredness: the models keep getting stronger, and my own output hasn't kept up. Most of my day goes into switching between a few conversation windows, carrying one side's output over and filling in what the other side missed. Somewhere along the way I became the glue between AIs, with no time left to think the direction through.
 
-The problem isn't that AI isn't smart enough. It's that the bandwidth between people and AI is too limited. I built DS-buddy to explore a new way of interacting, one that takes this needless layer of friction out of working with AI.
+The problem isn't that AI isn't smart enough. It's that the bandwidth between people and AI is too limited. I built DSH-projects to explore a new way of interacting, one that takes this needless layer of friction out of working with AI.
 
-Here are the core principles we built DS-buddy on:
+Here are the core principles we built DSH-projects on:
 
 **Most of the time, you don't need multiple agents. Managing agents is, at heart, managing context.**
 
@@ -16,19 +16,19 @@ Many products put the way human teams are organised straight onto AI: a pile of 
 
 **Build context around goals (loops).**
 
-The key to using AI well is to split the work into a structure that can be verified and has a clear goal: one goal and one loop at a time. Without role play to divide the work, what needs maintaining is the tasks themselves. In DS-buddy the assistant keeps a set of task files (goals): what the goal is, what counts as done and where the context lives are all written down. Every core thread has a stable context; add automations that run on a schedule, and everyday work turns into loops that run without anyone watching.
+The key to using AI well is to split the work into a structure that can be verified and has a clear goal: one goal and one loop at a time. Without role play to divide the work, what needs maintaining is the tasks themselves. In DSH-projects the assistant keeps a set of task files (goals): what the goal is, what counts as done and where the context lives are all written down. Every core thread has a stable context; add automations that run on a schedule, and everyday work turns into loops that run without anyone watching.
 
 **We don't need the concept of an agent. The runtime details and the dynamic, fragmented state should stay hidden.**
 
-I would go further: the agent itself is a needless middle layer. In products like Multica, you configure Skills and runtimes for your agents before any work starts. But tools and environments are just task context; they should grow as the project needs them, not be fixed in advance. So DS-buddy keeps the fragmented runtime state underneath and exposes only the model. Every extra layer of agent is one more thing to keep in your head. The one thing you need to care about is a sentence per project on which models to prefer.
+I would go further: the agent itself is a needless middle layer. In products like Multica, you configure Skills and runtimes for your agents before any work starts. But tools and environments are just task context; they should grow as the project needs them, not be fixed in advance. So DSH-projects keeps the fragmented runtime state underneath and exposes only the model. Every extra layer of agent is one more thing to keep in your head. The one thing you need to care about is a sentence per project on which models to prefer.
 
 **You can do without the agent abstraction, but every runtime should stay visible.**
 
-Hiding concepts doesn't mean building a black box. When tasks run on their own in the background, people need something to rely on. So while it takes away the agent abstraction, DS-buddy gives every run a clear view: when the assistant was woken and by what, which tools it called in order, and how it turned out, all in the developer view.
+Hiding concepts doesn't mean building a black box. When tasks run on their own in the background, people need something to rely on. So while it takes away the agent abstraction, DSH-projects gives every run a clear view: when the assistant was woken and by what, which tools it called in order, and how it turned out, all in the developer view.
 
 **Take in as much context as possible, use the best model to assign the work, then let the AI explore.**
 
-Building this product has also meant slowly letting go of control. I believe more and more that enough context and room to explore beat any amount of prompt polishing. DS-buddy turns what you do on your computer into a timeline and hands it to the model as background; what the model is unsure about lands on a board called Waiting on you. You make the calls at the key points, and it finds the rest of the way.
+Building this product has also meant slowly letting go of control. I believe more and more that enough context and room to explore beat any amount of prompt polishing. DSH-projects turns what you do on your computer into a timeline and hands it to the model as background; what the model is unsure about lands on a board called Waiting on you. You make the calls at the key points, and it finds the rest of the way.
 
 **A small suggestion: give the personal assistant the best model you can.**
 
@@ -43,8 +43,8 @@ The interface is in Chinese for now.
 **Install.** You need DeepSeek Harness (tested on 0.2.1) and Node 24 or later. If you do not have DeepSeek Harness yet: `npm install -g @deepseek-ai/dsh`.
 
 ```sh
-git clone https://github.com/hovocope135-tech/DS-buddy
-cd DS-buddy/plugin
+git clone https://github.com/hovocope135-tech/DSH-projects
+cd DSH-projects/plugin
 dsh plugin --profile web add "$(pwd)"    # add the plugin to DeepSeek Harness
 dsh --profile web                        # start it and open the address it prints
 ```
@@ -89,9 +89,9 @@ It doesn't send messages in your name. Without a word from you it makes no decis
 
 ## More
 
-- [Introduction, full version](https://hovocope135-tech.github.io/DS-buddy/site/blog/en/): the long version of this introduction
-- [Architecture](https://hovocope135-tech.github.io/DS-buddy/site/blog/en/deep/): how it is built
-- [Product page](https://hovocope135-tech.github.io/DS-buddy/site/), [film](https://github.com/hovocope135-tech/DS-buddy/releases/latest/download/tacit-film.mp4)
+- [Introduction, full version](https://hovocope135-tech.github.io/DSH-projects/site/blog/en/): the long version of this introduction
+- [Architecture](https://hovocope135-tech.github.io/DSH-projects/site/blog/en/deep/): how it is built
+- [Product page](https://hovocope135-tech.github.io/DSH-projects/site/), [film](https://github.com/hovocope135-tech/DSH-projects/releases/latest/download/tacit-film.mp4)
 - [Getting started](docs/GETTING-STARTED.md), [features](docs/FEATURES.md) and [test report](docs/TESTING.md) (Chinese)
 
 ## Where it stands

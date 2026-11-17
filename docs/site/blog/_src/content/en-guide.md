@@ -1,15 +1,15 @@
 ^ Notes on building AI products
 # Guide: working with Tacit
 
-In DS-buddy you mostly deal with two things: the personal assistant, Tacit, and one board called Waiting on you. Here is a first session, step by step. The interface is in Chinese for now; the labels below are translated.
+In DSH-projects you mostly deal with two things: the personal assistant, Tacit, and one board called Waiting on you. Here is a first session, step by step. The interface is in Chinese for now; the labels below are translated.
 
 ## 1. Install
 
 You need DeepSeek Harness 0.2.x and Node 24 or later. If you don't have DeepSeek Harness yet: `npm install -g @deepseek-ai/dsh`.
 
 ```
-git clone https://github.com/hovocope135-tech/DS-buddy
-cd DS-buddy/plugin
+git clone https://github.com/hovocope135-tech/DSH-projects
+cd DSH-projects/plugin
 dsh plugin --profile web add "$(pwd)"
 dsh --profile web
 ```
@@ -85,7 +85,7 @@ All of these are read-only and can be turned off at any time:
 
 - **Feishu**: assistant settings, live Feishu reading. Once authorised, Tacit can read messages and documents but can't send. When someone is waiting for your reply, it shows up on Waiting on you; whether to be reminded proactively is a separate setting.
 - **Files on your computer**: assistant settings, computer files. Choose specific folders or all files, or pause it.
-- **Screen**: run the DS-buddy device program on a computer that has Screenpipe. It reads the text of the windows once a minute and sends text only; screenshots stay on the computer. Every 10 minutes the activity is organised into a timeline, filed under a project when it is clear which one.
+- **Screen**: run the DSH-projects device program on a computer that has Screenpipe. It reads the text of the windows once a minute and sends text only; screenshots stay on the computer. Every 10 minutes the activity is organised into a timeline, filed under a project when it is clear which one.
 
 ![The timeline: each activity with the apps used and the project it belongs to](img/timeline-apps.jpg "The timeline.")
 

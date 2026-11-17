@@ -1,4 +1,4 @@
-# 上手 DS-buddy
+# 上手 DSH-projects
 
 十分钟走完：装上，认识助理，交代第一件事，验收第一份交付。
 
@@ -6,7 +6,7 @@
 
 | 必须 | 说明 |
 | --- | --- |
-| DeepSeek Harness 0.2.x | DS-buddy 是它的一个插件，用的是它的 Web profile。没装过的话：`npm install -g @deepseek-ai/dsh`。在 0.2.1 上测过。 |
+| DeepSeek Harness 0.2.x | DSH-projects 是它的一个插件，用的是它的 Web profile。没装过的话：`npm install -g @deepseek-ai/dsh`。在 0.2.1 上测过。 |
 | Node 24 以上 | 跑插件和单测。 |
 
 可选：
@@ -19,8 +19,8 @@
 ## 第一步：装上
 
 ```sh
-git clone https://github.com/hovocope135-tech/DS-buddy
-cd DS-buddy/plugin && npm test        # 全部单测，应当全过
+git clone https://github.com/hovocope135-tech/DSH-projects
+cd DSH-projects/plugin && npm test        # 全部单测，应当全过
 dsh plugin --profile web add "$(pwd)"
 dsh --profile web
 ```
@@ -56,7 +56,7 @@ dsh --profile web
 - 要改：点文件上的「请求修改」，输入框里会先填好这个文件名，接着写要改什么。
 - 执行者中途要你拍板时，会给一张选项卡片，推荐项标出来；都不合适就直接打字回答。
 
-DS-buddy 不会替你验收，也不会替你拍板。
+DSH-projects 不会替你验收，也不会替你拍板。
 
 ## 之后会用到的
 
@@ -81,7 +81,7 @@ DS-buddy 不会替你验收，也不会替你拍板。
 | 页面显示「连不上服务，正在重连…」 | 服务停了或在重启。等它回来，页面会自己连上，不用重新登录。 |
 | 任务停在「失败」 | 打开任务看最后一条进展。多半是模型或网络错误，对它说「接着做」。 |
 | 换成 Codex 后没动静 | Codex 需要在这台机器上自己登录过。没登录会报错并停住。 |
-| 换成 Codex 或 Claude Code 后提示缺少环境变量 | DS-buddy 启动外部执行者时只带基础的环境变量，以及 `ANTHROPIC_`、`CLAUDE_`、`OPENAI_`、`CODEX_` 开头的那些，别的不带，免得把无关的密钥交出去。执行者的模型密钥如果放在别的变量名里，它就读不到：换成这几类变量名，或者让执行者用它自己的登录。 |
+| 换成 Codex 或 Claude Code 后提示缺少环境变量 | DSH-projects 启动外部执行者时只带基础的环境变量，以及 `ANTHROPIC_`、`CLAUDE_`、`OPENAI_`、`CODEX_` 开头的那些，别的不带，免得把无关的密钥交出去。执行者的模型密钥如果放在别的变量名里，它就读不到：换成这几类变量名，或者让执行者用它自己的登录。 |
 | 想换模型网关 | 见上面「你需要什么」最后一句。 |
 
 ## 数据在哪

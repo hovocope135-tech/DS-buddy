@@ -3,14 +3,14 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>你的下一个 Agent 产品，不一定需要有 Agent | DS-buddy</title>
+<title>你的下一个 Agent 产品，不一定需要有 Agent | DSH-projects</title>
 <meta name="description" content="探索人与 AI 的最佳协作方式">
 <meta property="og:type" content="article">
-<meta property="og:site_name" content="DS-buddy">
+<meta property="og:site_name" content="DSH-projects">
 <meta property="og:title" content="你的下一个 Agent 产品，不一定需要有 Agent">
 <meta property="og:description" content="探索人与 AI 的最佳协作方式">
-<meta property="og:url" content="https://hovocope135-tech.github.io/DS-buddy/site/blog/">
-<meta property="og:image" content="https://hovocope135-tech.github.io/DS-buddy/site/blog/img/rd2-hero.jpg">
+<meta property="og:url" content="https://hovocope135-tech.github.io/DSH-projects/site/blog/">
+<meta property="og:image" content="https://hovocope135-tech.github.io/DSH-projects/site/blog/img/rd2-hero.jpg">
 <meta name="twitter:card" content="summary_large_image">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -21,12 +21,12 @@
 <body>
 <div class="page">
 <aside class="side">
-  <a class="brand" href="./"><span>DS-buddy</span></a>
-  <nav><a class="on" href="./">介绍</a><a href="deep/">工程架构</a><a href="guide/">使用说明</a><a href="https://github.com/hovocope135-tech/DS-buddy">GitHub</a></nav>
+  <a class="brand" href="./"><span>DSH-projects</span></a>
+  <nav><a class="on" href="./">介绍</a><a href="deep/">工程架构</a><a href="guide/">使用说明</a><a href="https://github.com/hovocope135-tech/DSH-projects">GitHub</a></nav>
 </aside>
 <main>
   <div class="bar">
-    <a class="brand sm" href="./"><span>DS-buddy</span></a>
+    <a class="brand sm" href="./"><span>DSH-projects</span></a>
     <span class="sp"></span>
     <button class="theme" type="button" aria-label="切换深浅色" title="切换深浅色"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4.2"/><path d="M12 2.5v2.6M12 18.9v2.6M2.5 12h2.6M18.9 12h2.6M5.3 5.3l1.8 1.8M16.9 16.9l1.8 1.8M5.3 18.7l1.8-1.8M16.9 7.1l1.8-1.8"/></svg></button>
     <span class="langs"><a href="./" class="on" aria-current="page" lang="zh-CN">中文</a><i>/</i><a href="en/" lang="en">EN</a></span>
@@ -35,10 +35,10 @@
     <header>
       <p class="kick">我的 AI 产品实践</p>
       <h1>你的下一个 Agent 产品，不一定需要有 Agent</h1>
-      <p class="meta">DS-buddy <i>·</i> 2026/11/16</p>
+      <p class="meta">DSH-projects <i>·</i> 2026/11/16</p>
       <p class="dek">探索人与 AI 的最佳协作方式</p>
     </header>
-<figure class="shot"><a href="img/rd2-hero.jpg"><img src="img/rd2-hero.jpg" alt="DS-buddy：左边是个人助理 Tacit，右边是「待你决定」看板" loading="lazy"></a></figure>
+<figure class="shot"><a href="img/rd2-hero.jpg"><img src="img/rd2-hero.jpg" alt="DSH-projects：左边是个人助理 Tacit，右边是「待你决定」看板" loading="lazy"></a></figure>
 <p>最近半年，我最大的感受是：agent 越来越能干。一方面惊叹于 AI 能力的进步，另一方面却发现自己的效率提升很有限，常常自己在多个对话中奔命。</p>
 <p>今天的 AI 应用产品，最核心、最紧迫的问题，就是去降低人和 AI 之间沟通的带宽。一方面，我们需要有很好的方式去把上下文交给 AI；另一方面，又不能让人为此付出更多的注意力。</p>
 <p>我们常常面临的困境是：我们疲于奔命，绝大多数时候都在扮演胶水的角色，搬运上下文，却缺少真正的时间来思考，给出正确的方向。</p>
@@ -53,7 +53,7 @@
 <p>管理 agent 的本质，是管理 context。而在会议室式的多 agent 里，每个 Agent 从一个人类岗位的视角补充意见，但任务本身并没有被整理成可交付、可验证、可合成的结构。这只是把人类的组织形式搬到了模型上，而不是面向 Agent 的能力边界来设计系统。</p>
 <h2 id="s2">解决方案：转向以 Goal（Loop）为核心的 context 管理</h2>
 <p><strong>runtime 和 session 只是临时的工具，把模糊的目标拆解为可闭环的 AI 任务。</strong></p>
-<p>AI 的特性是需要明确的目标和验收标准。每一个核心线程，工作习惯都转向了以 goal，也就是 loop 为核心。所以最佳的上下文方案，一定是在一开始就有意识地设计，而不是随着对话精进。真正适合交给另一个 Agent 的任务，应该像一个可以独立交付的完整子问题。它不一定很庞大，但必须完整。DS-buddy 有意识地让每一个 agent 去维护每个任务的组织，同时提供自动任务（定时重复运行的任务），帮助你丝滑地构建自己的任务循环。</p>
+<p>AI 的特性是需要明确的目标和验收标准。每一个核心线程，工作习惯都转向了以 goal，也就是 loop 为核心。所以最佳的上下文方案，一定是在一开始就有意识地设计，而不是随着对话精进。真正适合交给另一个 Agent 的任务，应该像一个可以独立交付的完整子问题。它不一定很庞大，但必须完整。DSH-projects 有意识地让每一个 agent 去维护每个任务的组织，同时提供自动任务（定时重复运行的任务），帮助你丝滑地构建自己的任务循环。</p>
 <p>对于每一个任务来说，目前 session 的问题是：绝大多数有价值的 context，都淹没在动态的对话里。但实际上，一个任务固定的索引是很简单的，往往就是一些明确的目标、仓库的位置、验收的标准、文档的位置。</p>
 <p>所以人只需要讲清楚三件事：要做什么，上下文在什么地方，标准是什么。然后 AI 把它们拆解成一个一个任务（thread）的上下文包。上下文包可以粗略理解为一个 goal 文件，这是我们真正要长期维护的，每次注入，每次更新。</p>
 <figure class="shot"><a href="img/rd2-pack.jpg"><img src="img/rd2-pack.jpg" alt="一个任务的详情页，也就是它的上下文包" loading="lazy"></a></figure>
@@ -62,7 +62,7 @@
 <h2 id="s3">隐藏配置的细节：相信模型的能力，提供看板而非表单，一切交给 AI</h2>
 <p>现在市面上类似的多 agent 产品都过度暴露了。Multica、Raft 通过群聊、通过工单的传递，确实很好地提供了一种组织方式，底层的抽象也做得很好，我借鉴了它们的思路和构造方式。但对人来说，建频道、配角色、做分工，本身也是一件费力的事情。</p>
 <p>细节是需要包裹的。上下文怎么组装、缓存在哪一层命中、token 怎么省，这些都是引擎盖下的事，不该露到用户面前。包裹得好，还有实际的回报：稳定的部分放在前面，模型就能复用上次的阅读成果，而缓存命中和不命中，成本差着一个数量级。</p>
-<p>所以在 DS-buddy 里，没有要起名字的 agent，也没有要配的技能。但每件事做到哪了、交给了哪个模型，都看得见：每个任务有一页详情，需要你的事都在一块「待你决定」的看板上。</p>
+<p>所以在 DSH-projects 里，没有要起名字的 agent，也没有要配的技能。但每件事做到哪了、交给了哪个模型，都看得见：每个任务有一页详情，需要你的事都在一块「待你决定」的看板上。</p>
 <figure class="shot"><a href="img/rd2-board.jpg"><img src="img/rd2-board.jpg" alt="「待你决定」的等你一栏，和一个任务的进展与执行" loading="lazy"></a></figure>
 <h2 id="s4">全面的 context 收集</h2>
 <p><strong>把人从信息的搬运里解放出来，走向 always-on、真正懂你的理想 AI。</strong></p>
@@ -71,13 +71,13 @@
 <p>自动获取不是一件新鲜的事情，以 Screenpipe 为代表，还有 AirJelly、Littlebird，包括 Codex 内置的 Computer History，都早就存在了，但它们大多没有打通从 context 到行动的循环。</p>
 <figure class="shot"><a href="img/rd2-recall.jpg"><img src="img/rd2-recall.jpg" alt="问 Tacit 访谈里的一句话，它从屏幕记下的内容里找到出处" loading="lazy"></a></figure>
 <p>我认为这是未来的工作模式：人只在真正的接入口表达喜好、价值，给出关键的指引，而不是像今天这样沦为信息的搬运工，伤害注意力。让人能够专注于真正重要的事情。</p>
-<p>DS-buddy 里核心的助理，名字默认叫 Tacit，内涵是默会，心领神会。因为我认为，真正好的 buddy 应该在你开口之前，就了解一切相关的上下文。</p>
+<p>DSH-projects 里核心的助理，名字默认叫 Tacit，内涵是默会，心领神会。因为我认为，真正好的 buddy 应该在你开口之前，就了解一切相关的上下文。</p>
 <figure class="shot"><a href="img/rd2-tacit.jpg"><img src="img/rd2-tacit.jpg" alt="Tacit 的性格、名字和呼出快捷键" loading="lazy"></a></figure>
 <h2 id="s5">最大的挑战：如何科学地分解任务</h2>
 <p>今天最大的问题是 coordinator，也就是负责拆任务的助理，能不能科学合理地规划任务的分工和粒度。所以我们推荐使用 Claude Opus 5.5 或 GPT-6 Astra 这样的强模型，作为个人助理的模型，也就是帮你配置的那个助理，来尽可能把任务拆好。随着模型智能的不断提升和分工 skills 的打磨，这件事会越做越好。</p>
 <figure class="shot"><a href="img/rd2-models.jpg"><img src="img/rd2-models.jpg" alt="每个助理用什么模型，一页看清" loading="lazy"></a></figure>
 <p>欢迎体验。</p>
-<p>DS-buddy，你的下一个 Agent 产品，不一定需要有 Agent。</p>
+<p>DSH-projects，你的下一个 Agent 产品，不一定需要有 Agent。</p>
 <p>更多阅读：</p>
 <ul><li><a href="guide/">使用说明</a>：怎么和 Tacit 一起工作</li><li><a href="deep/">工程架构</a>：讲它是怎么搭起来的</li></ul>
   </article>

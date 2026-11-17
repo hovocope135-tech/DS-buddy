@@ -1,4 +1,4 @@
-Source of the DS-buddy posts served from docs/site/blog/.
+Source of the DSH-projects posts served from docs/site/blog/.
 
 content/zh.md, content/en.md              1. the introduction: the product's core ideas (also the top of the README)
 content/zh-deep.md, content/en-deep.md    2. the architecture: a technical write-up

@@ -2,7 +2,7 @@
 # Your next agent product may not need agents
 > Exploring the best way for people and AI to work together
 
-![DS-buddy: the personal assistant Tacit on the left, the Waiting on you board on the right](img/rd2-hero.jpg)
+![DSH-projects: the personal assistant Tacit on the left, the Waiting on you board on the right](img/rd2-hero.jpg)
 
 Over the past six months, my strongest impression has been that agents keep getting more capable. On one hand I am amazed at how far AI has come; on the other, my own efficiency has improved only a little, and I often find myself running between several conversations.
 
@@ -32,7 +32,7 @@ Managing agents is, at heart, managing context. In a meeting-room style of multi
 
 **Runtimes and sessions are only temporary tools; a vague goal is broken down into AI tasks that can close their own loop.**
 
-AI needs a clear goal and acceptance criteria. For every core thread, the way of working has turned towards the goal, that is, the loop. So the best answer for context has to be designed consciously from the start, rather than refined as the conversation goes on. A task that is really fit to hand to another agent should be like a complete sub-problem that can be delivered on its own. It doesn't have to be big, but it has to be complete. DS-buddy deliberately has an agent maintain the organisation of each task, and offers automated tasks (tasks that run again on a schedule) to help you build your own task loops smoothly.
+AI needs a clear goal and acceptance criteria. For every core thread, the way of working has turned towards the goal, that is, the loop. So the best answer for context has to be designed consciously from the start, rather than refined as the conversation goes on. A task that is really fit to hand to another agent should be like a complete sub-problem that can be delivered on its own. It doesn't have to be big, but it has to be complete. DSH-projects deliberately has an agent maintain the organisation of each task, and offers automated tasks (tasks that run again on a schedule) to help you build your own task loops smoothly.
 
 For each task, the problem with today's sessions is that most of the valuable context gets buried in the moving conversation. Yet the fixed index of a task is simple. It is usually a clear goal, where the repository is, the acceptance standard, and where the documents are.
 
@@ -50,7 +50,7 @@ Similar multi-agent products on the market today all expose too much. Multica an
 
 The details need wrapping. How the context is assembled, at which layer the cache hits, how tokens are saved: all of this is under the hood and shouldn't be put in front of the user. Wrapping it well also pays off: with the stable part at the front, the model can reuse what it read last time, and a cache hit and a cache miss differ in cost by an order of magnitude.
 
-So in DS-buddy there are no agents to name and no skills to configure. But how far each job has got, and which model it went to, is always visible: every task has a page of details, and whatever needs you is on one board called Waiting on you.
+So in DSH-projects there are no agents to name and no skills to configure. But how far each job has got, and which model it went to, is always visible: every task has a page of details, and whatever needs you is on one board called Waiting on you.
 
 ![The waiting lane of the board, and one task's progress and executor](img/rd2-board.jpg)
 
@@ -68,7 +68,7 @@ Capturing context automatically isn't new. Screenpipe is the best-known example,
 
 I think this is how we will work in future: people express preferences and values and give the key guidance only at the points where they are really needed, instead of being reduced, as today, to carriers of information whose attention suffers. That lets people focus on what really matters.
 
-The core assistant in DS-buddy is called Tacit by default, meaning tacit understanding. I think a really good buddy should know all the relevant context before you open your mouth.
+The core assistant in DSH-projects is called Tacit by default, meaning tacit understanding. I think a really good buddy should know all the relevant context before you open your mouth.
 
 ![Tacit's personality, name and shortcut](img/rd2-tacit.jpg)
 
@@ -80,7 +80,7 @@ The biggest problem today is whether the coordinator, the assistant that splits 
 
 Come and try it.
 
-DS-buddy: your next agent product may not need agents.
+DSH-projects: your next agent product may not need agents.
 
 Further reading:
 

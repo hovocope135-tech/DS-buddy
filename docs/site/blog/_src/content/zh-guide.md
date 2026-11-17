@@ -1,15 +1,15 @@
 ^ 我的 AI 产品实践
 # 使用说明：和 Tacit 一起工作
 
-DS-buddy 里你主要打交道的是两样东西：个人助理 Tacit，和一块叫「待你决定」的看板。下面按第一次用的顺序走一遍。
+DSH-projects 里你主要打交道的是两样东西：个人助理 Tacit，和一块叫「待你决定」的看板。下面按第一次用的顺序走一遍。
 
 ## 1. 装上
 
 需要 DeepSeek Harness 0.2.x 和 Node 24 以上。没装过 DeepSeek Harness 的话，先 `npm install -g @deepseek-ai/dsh`。
 
 ```
-git clone https://github.com/hovocope135-tech/DS-buddy
-cd DS-buddy/plugin
+git clone https://github.com/hovocope135-tech/DSH-projects
+cd DSH-projects/plugin
 dsh plugin --profile web add "$(pwd)"
 dsh --profile web
 ```
@@ -85,7 +85,7 @@ Tacit 不进项目干活，它看着所有项目。在个人对话里，你明�
 
 - **飞书**：「助理设置 → 飞书实时读取」。授权后 Tacit 能读消息和文档，不能发。有人在等你回，会出现在「等你」里；要不要主动提醒，在「飞书主动提醒」里选。
 - **电脑文件**：「助理设置 → 电脑文件」，选「指定文件夹」或「全部文件」，也可以暂停。
-- **屏幕**：在装了 Screenpipe 的电脑上运行 DS-buddy 的设备程序，它每分钟读一次窗口里的文字，只传文字，截图留在电脑上。每 10 分钟整理成一条时间线，认得出项目的归到项目。
+- **屏幕**：在装了 Screenpipe 的电脑上运行 DSH-projects 的设备程序，它每分钟读一次窗口里的文字，只传文字，截图留在电脑上。每 10 分钟整理成一条时间线，认得出项目的归到项目。
 
 ![时间线：每段活动带着用到的应用和所属项目](img/timeline-apps.jpg "时间线。")
 
