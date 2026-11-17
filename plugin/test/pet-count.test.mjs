@@ -33,12 +33,18 @@ test('a centred scene is shifted so what is drawn sits in the middle; a template
   assert.equal(client.isTemplate({ template: 'owl' }, owl), true)
 })
 
-test('the layers that float above the page (the pet and the look studio) sit inside the colour scope, so their borders and hovers resolve', () => {
+test('the look studio, which floats above the page, sits inside the colour scope, so its borders and hovers resolve', () => {
   const source = readFileSync(new URL('../lib/client.js', import.meta.url), 'utf8')
   const rule = source.split('\n').find(line => line.includes('{--mp4-fg:'))
   assert.ok(rule, 'the scope rule exists')
   const roots = rule.slice(0, rule.indexOf('{')).split(',')
-  for (const root of ['.mp4-ball-wrap', '.mp4-studio-veil']) assert.ok(roots.includes(root), root)
+  assert.ok(roots.includes('.mp4-studio-veil'))
+})
+
+test('no desktop pet in the first release: nothing floats in the corner, no pet setting, the summon key still opens the assistant', () => {
+  const source = readFileSync(new URL('../lib/client.js', import.meta.url), 'utf8')
+  for (const gone of ['mira-ball', 'mp4-ball', 'MiraBall', '桌宠']) assert.ok(!source.includes(gone), gone)
+  assert.match(source, /"mira-projects: summon key"/)
 })
 
 test('every look has a pale face window on a softer body: the face is lighter than the body, the eyes darker than the face, no ink outline', () => {

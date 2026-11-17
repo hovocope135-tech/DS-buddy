@@ -3430,7 +3430,7 @@ window.__ModuleLoader__.load({
 			return h(React.Fragment, null,
 				sourceRef ? null : h("div", { className: "mp4-page-head" }, h("h3", { className: "mp4-tab-title" }, "助理设置")),
 				sourceRef ? h(React.Fragment, null, h(SourcePanel, { key: sourceRef, sourceRef }), h("button", { type: "button", className: "mp4-link-btn", onClick: () => setSourceRef(null) }, "‹ 返回")) : h(React.Fragment, null, h("div", { className: "mp4-setlist" },
-					row("形象与快捷键", snap.look ? `${snap.look.name}，${hotkeyLabel(snap.look.hotkey)}${snap.look.hotkey ? " 呼出" : ""}` : "捏一个你的助理", () => openStudio()),
+					row("性格与快捷键", snap.look ? `${snap.look.name}，${hotkeyLabel(snap.look.hotkey)}${snap.look.hotkey ? " 呼出" : ""}` : "捏一个你的助理", () => openStudio()),
 					Array.isArray(snap.observationDevices) ? row("活动与设备", "电脑端采集的活动和设备", () => setDialog("observations")) : null,
 					row("邮件与飞书来源", "个人助理能读的外部资料", () => setDialog("connectors")),
 					row("飞书实时读取", "读取飞书消息和文档，只读", () => setDialog(dialog === "feishuLive" ? null : "feishuLive")),
@@ -4144,7 +4144,7 @@ window.__ModuleLoader__.load({
 			if (waiting) return { state: "waiting", title: `${waiting} 项待处理` };
 			return { state: "sleeping", title: "都歇着" };
 		}
-		// ---------------------------------------------------------------- the assistant's look: studio, hotkey, pet
+		// ---------------------------------------------------------------- the assistant's look: studio and hotkey
 		const LOOK_TRAIT_LIST = ["温和", "干脆", "幽默", "严谨", "好奇", "安静", "热情", "冷静", "细心", "直接", "乐观", "有条理"];
 		const LOOK_TEMPLATES = [
 			{ id: "sprout", name: "Tacit", color: "yellow", shape: "mochi", eyes: "dot", accessory: "sprout", traits: ["温和", "细心"] },
@@ -4194,12 +4194,13 @@ window.__ModuleLoader__.load({
 		function closeStudio() { studioBus.open = false; studioBus.subs.forEach(f => f()); }
 		const useStudioOpen = () => useSyncExternalStore(f => { studioBus.subs.add(f); return () => studioBus.subs.delete(f); }, () => studioBus.open, () => false);
 		/**
-		 * The summon key and the ball do one thing: open the assistant's own conversation with the cursor in its composer,
+		 * The summon key does one thing: open the assistant's own conversation with the cursor in its composer,
 		 * the same box, model picker and streaming replies as always (the owner, 2026-11-17: no separate quick-ask).
 		 */
 		let assistantSessionId = null;
 		async function summon() {
 			const onScreen = shell.sidebar?.mounted?.getSnapshot?.();
+			assistantSessionId = sharedFeed("api/mira-projects/personal", { loaded: false }).getSnapshot().sessionId || assistantSessionId;
 			if (!assistantSessionId || onScreen !== assistantSessionId) await openMira();
 			const focus = (tries) => { const editor = document.querySelector('[contenteditable="true"]'); if (editor) editor.focus(); else if (tries) setTimeout(() => focus(tries - 1), 150); };
 			focus(10);
@@ -4211,15 +4212,12 @@ window.__ModuleLoader__.load({
 				lookPortrait(L, face).map(([x, y, w, c]) => h("rect", { key: x + "-" + y, x, y, width: w + 0.02, height: 1.02, fill: c })));
 		}
 
-		/** First run, or 助理设置 → 形象与快捷键: character, figure, name, summon key and pet, in three short steps. */
+		/** First run, or 助理设置 → 性格与快捷键: character, name and summon key, in two short steps. */
 		function LookStudio({ initial, first, onClose }) {
 			// First run starts with no traits picked: the owner's choice, not ours.
 			const [draft, setDraft] = useState(() => initial ? { ...lookOf(LOOK_TEMPLATES[0]), ...initial } : { ...lookOf(LOOK_TEMPLATES[0]), traits: [] });
 			const [step, setStep] = useState(0), [touched, setTouched] = useState(!!initial);
 			const [sentence, setSentence] = useState(""), [busy, setBusy] = useState(null), [error, setError] = useState(null), [recording, setRecording] = useState(false);
-			const [preview, setPreview] = useState(0);
-			const states = ["working", "done", "waiting", "sleeping"];
-			useEffect(() => { const t = setInterval(() => setPreview(p => (p + 1) % 4), 2400); return () => clearInterval(t); }, []);
 			useEffect(() => {
 				if (!recording) return;
 				studioBus.recording = true;
@@ -4262,23 +4260,17 @@ window.__ModuleLoader__.load({
 					h("div", { className: "mp4-studio-row" }, h("span", { className: "mp4-k" }, "呼出"),
 						h("div", { className: "mp4-chips" },
 							h("button", { type: "button", className: "mp4-key" + (recording ? " mp4-key-on" : ""), onClick: () => setRecording(true) }, recording ? "按下新的组合键…" : hotkeyLabel(draft.hotkey)),
-							draft.hotkey ? h("button", { type: "button", className: "mp4-mem-link", onClick: () => setDraft(d => ({ ...d, hotkey: null })) }, "不用") : h("button", { type: "button", className: "mp4-mem-link", onClick: () => setDraft(d => ({ ...d, hotkey: { ...DEFAULT_HOTKEY } })) }, "用默认"))),
-					h("div", { className: "mp4-studio-row" }, h("span", { className: "mp4-k" }, "桌宠"),
-						h("div", { className: "mp4-chips" },
-							chip(draft.pet.visible && draft.pet.size === "small", "小", () => setDraft(d => ({ ...d, pet: { visible: true, size: "small" } }))),
-							chip(draft.pet.visible && draft.pet.size === "large", "大", () => setDraft(d => ({ ...d, pet: { visible: true, size: "large" } }))),
-							chip(!draft.pet.visible, "不显示", () => setDraft(d => ({ ...d, pet: { ...d.pet, visible: false } })))))),
+							draft.hotkey ? h("button", { type: "button", className: "mp4-mem-link", onClick: () => setDraft(d => ({ ...d, hotkey: null })) }, "不用") : h("button", { type: "button", className: "mp4-mem-link", onClick: () => setDraft(d => ({ ...d, hotkey: { ...DEFAULT_HOTKEY } })) }, "用默认")))),
 			];
 			const titles = ["性格", "名称与快捷键"];
 			return h("div", { className: "mp4-studio-veil", onClick: e => { if (e.target === e.currentTarget && !busy) onClose(); } },
 				h("div", { className: "mp4-studio", role: "dialog", "aria-modal": true, "aria-label": "捏一个你的助理" },
 					h("div", { className: "mp4-studio-head" },
-						h("b", null, first ? "捏一个你的助理" : "形象与快捷键"),
+						h("b", null, first ? "捏一个你的助理" : "性格与快捷键"),
 						h("div", { className: "mp4-studio-steps" }, titles.map((t, i) => h("button", { key: t, type: "button", className: "mp4-studio-step" + (i === step ? " mp4-studio-step-on" : ""), onClick: () => setStep(i) }, `${i + 1} ${t}`))),
 						h("button", { type: "button", className: "mp4-dock-x", "aria-label": "关闭", onClick: onClose, disabled: !!busy }, h(Icon, { name: "close", size: 14 }))),
 					h("div", { className: "mp4-studio-main" },
 						h("div", { className: "mp4-studio-stage" },
-							h(PixelMark, { state: states[preview], size: 72 }),
 							h("b", null, draft.name || "未命名"),
 							draft.traits.length ? h("span", { className: "mp4-muted" }, draft.traits.join("、")) : null),
 						steps[step]),
@@ -4308,28 +4300,6 @@ window.__ModuleLoader__.load({
 			if (!open && (!first || hostBusy)) return null;
 			const close = () => { if (open) closeStudio(); else { setSkipped(true); try { window.sessionStorage.setItem("mira-projects:studio-later", "1"); } catch (_) {} } };
 			return h(LookStudio, { initial: personal.look, first: !personal.look, onClose: close });
-		}
-		function MiraBall() {
-			const hash = useRoute(), onScreen = useOnScreenSession(), nav = useSnapshot(), personal = usePersonal(), today = useToday();
-			const [bubbleOff, setBubbleOff] = useState(() => { try { return window.sessionStorage.getItem("mira-projects:ball-bubble") === "off"; } catch (_) { return false; } });
-			void hash;
-			const visible = !(isHomeRoute() || (onScreen && onScreen === personal.sessionId));
-			if (personal.sessionId) assistantSessionId = personal.sessionId;
-			const pet = personal.look && personal.look.pet || { visible: true, size: "small" }, who = personal.look && personal.look.name || "个人助理";
-			const keyNow = personal.look ? personal.look.hotkey : DEFAULT_HOTKEY;
-			// The ball reserves its bottom-right corner in the right panel, so its last row is never under it.
-			useEffect(() => {
-				const root = document.documentElement;
-				if (visible && pet.visible) root.setAttribute("data-mira-ball", pet.size === "large" ? "large" : "live"); else root.removeAttribute("data-mira-ball");
-				return () => root.removeAttribute("data-mira-ball");
-			}, [visible, pet.visible, pet.size]);
-			if (!visible) return null;
-			const scene = workspaceScene(allTasks(nav).map(x => x.t), personal.status === "running", Date.now());
-			const decisions = (today.waiting?.decisions || []).filter(d => Date.now() - d.since > 60 * 60e3).sort((a, b) => a.since - b.since);
-			const bubble = !bubbleOff && decisions[0] ? `「${decisions[0].threadTitle || "一个任务"}」等你拍板，等了 ${ago(decisions[0].since)}` : null;
-			return h("div", { className: "mp4-ball-wrap" },
-				bubble ? h("div", { className: "mp4-ball-bubble" }, h("button", { type: "button", onClick: () => summon() }, bubble), h("button", { type: "button", className: "mp4-icon", "aria-label": "先不用", onClick: () => { setBubbleOff(true); try { window.sessionStorage.setItem("mira-projects:ball-bubble", "off"); } catch (_) {} } }, "×")) : null,
-				pet.visible ? h("button", { type: "button", className: "mp4-ball", "aria-label": `打开${who}`, title: `${who}：${scene.title}${keyNow ? `，${hotkeyLabel(keyNow)} 呼出` : ""}`, onClick: () => summon() }, h(PixelMark, { state: scene.state, size: pet.size === "large" ? 56 : 44 })) : null);
 		}
 
 
@@ -4811,7 +4781,7 @@ html[data-theme="dark"] :is(.mp-page,.mp-trace-dialog,.mp-observation-dialog,.mp
 :root{--rx-gray-1:#fcfcfc;--rx-gray-2:#f9f9f9;--rx-gray-3:#f0f0f0;--rx-gray-4:#e8e8e8;--rx-gray-5:#e0e0e0;--rx-gray-6:#d9d9d9;--rx-gray-7:#cecece;--rx-gray-8:#bbbbbb;--rx-gray-9:#8d8d8d;--rx-gray-10:#838383;--rx-gray-11:#646464;--rx-gray-12:#202020;--rx-blue-3:#e6f4fe;--rx-blue-6:#acd8fc;--rx-blue-9:#0090ff;--rx-blue-11:#0d74ce;--rx-green-3:#e6f6eb;--rx-green-6:#adddc0;--rx-green-9:#30a46c;--rx-green-11:#218358;--rx-red-3:#feebec;--rx-red-6:#fdbdbe;--rx-red-9:#e5484d;--rx-red-11:#ce2c31;--rx-orange-3:#ffefd6;--rx-orange-6:#ffc182;--rx-orange-9:#f76b15;--rx-orange-11:#cc4e00;--rx-amber-3:#fff7c2;--rx-amber-6:#f3d673;--rx-amber-9:#ffc53d;--rx-amber-11:#ab6400;--rx-yellow-11:#9e6c00;--rx-teal-3:#e0f8f3;--rx-teal-6:#a1ded2;--rx-teal-9:#12a594;--rx-teal-11:#008573;--rx-purple-3:#f7edfe;--rx-purple-6:#e0c4f4;--rx-purple-9:#8e4ec6;--rx-purple-11:#8145b5;--rx-pink-3:#fee9f5;--rx-pink-6:#efbfdd;--rx-pink-9:#d6409f;--rx-pink-11:#c2298a;--rx-violet-3:#f4f0fe;--rx-violet-6:#d4cafe;--rx-violet-9:#6e56cf;--rx-violet-11:#6550b9}
 @media (prefers-color-scheme:dark){html:not([data-theme="light"]){--rx-gray-1:#111111;--rx-gray-2:#191919;--rx-gray-3:#222222;--rx-gray-4:#2a2a2a;--rx-gray-5:#313131;--rx-gray-6:#3a3a3a;--rx-gray-7:#484848;--rx-gray-8:#606060;--rx-gray-9:#6e6e6e;--rx-gray-10:#7b7b7b;--rx-gray-11:#b4b4b4;--rx-gray-12:#eeeeee;--rx-blue-3:#0d2847;--rx-blue-6:#104d87;--rx-blue-9:#0090ff;--rx-blue-11:#70b8ff;--rx-green-3:#132d21;--rx-green-6:#20573e;--rx-green-9:#30a46c;--rx-green-11:#3dd68c;--rx-red-3:#3b1219;--rx-red-6:#72232d;--rx-red-9:#e5484d;--rx-red-11:#ff9592;--rx-orange-3:#331e0b;--rx-orange-6:#66350c;--rx-orange-9:#f76b15;--rx-orange-11:#ffa057;--rx-amber-3:#302008;--rx-amber-6:#5c3d05;--rx-amber-9:#ffc53d;--rx-amber-11:#ffca16;--rx-yellow-11:#f5e147;--rx-teal-3:#0d2d2a;--rx-teal-6:#145750;--rx-teal-9:#12a594;--rx-teal-11:#0bd8b6;--rx-purple-3:#301c3b;--rx-purple-6:#54346b;--rx-purple-9:#8e4ec6;--rx-purple-11:#d19dff;--rx-pink-3:#37172f;--rx-pink-6:#692955;--rx-pink-9:#d6409f;--rx-pink-11:#ff8dcc;--rx-violet-3:#291f43;--rx-violet-6:#473876;--rx-violet-9:#6e56cf;--rx-violet-11:#baa7ff}}
 html[data-theme="dark"],html.dark{--rx-gray-1:#111111;--rx-gray-2:#191919;--rx-gray-3:#222222;--rx-gray-4:#2a2a2a;--rx-gray-5:#313131;--rx-gray-6:#3a3a3a;--rx-gray-7:#484848;--rx-gray-8:#606060;--rx-gray-9:#6e6e6e;--rx-gray-10:#7b7b7b;--rx-gray-11:#b4b4b4;--rx-gray-12:#eeeeee;--rx-blue-3:#0d2847;--rx-blue-6:#104d87;--rx-blue-9:#0090ff;--rx-blue-11:#70b8ff;--rx-green-3:#132d21;--rx-green-6:#20573e;--rx-green-9:#30a46c;--rx-green-11:#3dd68c;--rx-red-3:#3b1219;--rx-red-6:#72232d;--rx-red-9:#e5484d;--rx-red-11:#ff9592;--rx-orange-3:#331e0b;--rx-orange-6:#66350c;--rx-orange-9:#f76b15;--rx-orange-11:#ffa057;--rx-amber-3:#302008;--rx-amber-6:#5c3d05;--rx-amber-9:#ffc53d;--rx-amber-11:#ffca16;--rx-yellow-11:#f5e147;--rx-teal-3:#0d2d2a;--rx-teal-6:#145750;--rx-teal-9:#12a594;--rx-teal-11:#0bd8b6;--rx-purple-3:#301c3b;--rx-purple-6:#54346b;--rx-purple-9:#8e4ec6;--rx-purple-11:#d19dff;--rx-pink-3:#37172f;--rx-pink-6:#692955;--rx-pink-9:#d6409f;--rx-pink-11:#ff8dcc;--rx-violet-3:#291f43;--rx-violet-6:#473876;--rx-violet-9:#6e56cf;--rx-violet-11:#baa7ff}
-.mp4-frame,.mp4-index,.mp4-tabpane,.mp4-ask,.mp4-toolline,.mp4-trig,.mp4-posted,.mp4-ball-wrap,.mp4-sugs,.mp4-dock-asks,.mp4-dock-notes,.mp4-filepane,.mp4-crumb,.mp4-studio-veil{--mp4-fg:var(--rx-gray-12);--mp4-fg2:var(--rx-gray-11);--mp4-fg3:var(--rx-gray-11);--mp4-hair:var(--dsw-alias-border-l2,rgba(0,0,0,.08));--mp4-hair2:var(--dsw-alias-border-l1,rgba(0,0,0,.12));--mp4-bg:var(--dsw-alias-bg-base,#FFFFFF);--mp4-fill:var(--dsw-alias-bg-secondary,var(--rx-gray-2));--mp4-hover:var(--dsw-alias-interactive-bg-hover,rgba(38,49,72,.06));--mp4-on:var(--dsw-alias-interactive-bg-active,rgba(38,49,72,.1));font-family:var(--dsw-font-family,-apple-system,"PingFang SC",sans-serif);color:var(--mp4-fg)}
+.mp4-frame,.mp4-index,.mp4-tabpane,.mp4-ask,.mp4-toolline,.mp4-trig,.mp4-posted,.mp4-sugs,.mp4-dock-asks,.mp4-dock-notes,.mp4-filepane,.mp4-crumb,.mp4-studio-veil{--mp4-fg:var(--rx-gray-12);--mp4-fg2:var(--rx-gray-11);--mp4-fg3:var(--rx-gray-11);--mp4-hair:var(--dsw-alias-border-l2,rgba(0,0,0,.08));--mp4-hair2:var(--dsw-alias-border-l1,rgba(0,0,0,.12));--mp4-bg:var(--dsw-alias-bg-base,#FFFFFF);--mp4-fill:var(--dsw-alias-bg-secondary,var(--rx-gray-2));--mp4-hover:var(--dsw-alias-interactive-bg-hover,rgba(38,49,72,.06));--mp4-on:var(--dsw-alias-interactive-bg-active,rgba(38,49,72,.1));font-family:var(--dsw-font-family,-apple-system,"PingFang SC",sans-serif);color:var(--mp4-fg)}
 .mp4-frame{display:flex;flex-direction:row;width:100%;height:100%;min-height:0;background:var(--mp4-bg)}
 .mp4-main{flex:1 1 auto;min-width:0;display:flex;flex-direction:column;min-height:0}
 .mp4-head{flex:none;height:52px;display:flex;align-items:center;gap:10px;padding:0 20px;border-bottom:.5px solid var(--mp4-hair)}
@@ -5084,14 +5054,14 @@ button.mp4-dock-note-text{all:unset;box-sizing:border-box;cursor:pointer;min-wid
 .mp4-setlist{display:flex;flex-direction:column;border:.5px solid var(--mp4-hair2);border-radius:8px;overflow:hidden}.mp4-setlist>*+*{border-top:.5px solid var(--mp4-hair)}.mp4-setlist,.mp4-setlist>*,.mp4-setlist>.mp4-setrow{flex-shrink:0}.mp4-setlist>:not(.mp4-setrow){padding:12px}
 .mp4-setrow{all:unset;box-sizing:border-box;cursor:pointer;display:flex;align-items:center;gap:12px;padding:10px 12px;color:var(--mp4-fg3)}.mp4-setrow:hover{background:var(--mp4-hover)}
 .mp4-setrow-text{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}.mp4-setrow-title{font-size:13px;line-height:20px;font-weight:500;color:var(--mp4-fg)}.mp4-setrow-desc{font-size:12px;line-height:18px;color:var(--mp4-fg3);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.mp4-ball-where{display:inline-flex;gap:6px;font-size:13px;line-height:20px}.mp4-send:not(:disabled){color:var(--mp4-fg)}
-.mp4-agent-select,.mp4-ball-input input,.mp4-sug,.mp4-guide,.mp4-card,.mp4-btn,.mp4-chip,.mp4-key,.mp4-tpl{border-width:.5px}
+.mp4-send:not(:disabled){color:var(--mp4-fg)}
+.mp4-agent-select,.mp4-sug,.mp4-guide,.mp4-card,.mp4-btn,.mp4-chip,.mp4-key,.mp4-tpl{border-width:.5px}
 .mp4-k,.mp4-sec>.mp4-k{font-weight:500}
 .mp4-tree-chev svg,.mp4-disclose svg{transition:transform 250ms ease-out}.mp4-tree-chev[aria-expanded=true] svg,[aria-expanded=true]>.mp4-disclose svg{transform:rotate(90deg)}.mp4-tree-chev{display:inline-flex;align-items:center;justify-content:center;height:20px}
 .mp4-disclose{display:inline-flex;align-items:center;gap:4px}.mp4-tree-title{font-weight:500}
 .mp4-fold>summary{list-style:none;display:flex;align-items:center;gap:4px;font-weight:500}.mp4-fold>summary::-webkit-details-marker{display:none}
 .mp4-fold>summary::before{content:"";flex:none;width:12px;height:12px;background:currentColor;-webkit-mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M9 6l6 6-6 6'/%3E%3C/svg%3E") center/12px no-repeat;mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M9 6l6 6-6 6'/%3E%3C/svg%3E") center/12px no-repeat;transition:transform 250ms ease-out}.mp4-fold[open]>summary::before{transform:rotate(90deg)}
-.mp4-agent-select,.mp4-studio-gen input,.mp4-studio-input,.mp4-ball-input input,.mp4-btn,.mp4-key{border-color:var(--rx-gray-7)}
+.mp4-agent-select,.mp4-studio-gen input,.mp4-studio-input,.mp4-btn,.mp4-key{border-color:var(--rx-gray-7)}
 .mp4-wrow-state{flex:none;font-weight:500;color:var(--rx-yellow-11);margin-right:6px}.mp4-wrow-state-failed{color:var(--rx-red-11)}
 .mp4-wgroup-n{margin-left:auto}.mp4-wgroup-head .mp4-wgroup-name{font-weight:500}
 .mp4-plist{border-top:none}
@@ -5099,7 +5069,6 @@ button.mp4-dock-note-text{all:unset;box-sizing:border-box;cursor:pointer;min-wid
 .mp4-chip{border-color:var(--rx-gray-7)}
 .mp4-wrow-go{flex:none;margin-left:auto;display:inline-flex;align-items:center;gap:2px;padding-left:8px;color:var(--mp4-fg3)}.mp4-wrow:hover .mp4-wrow-go{color:var(--mp4-fg)}
 
-html[data-mira-ball=large]{--mira-pet-room:136px}
 .mp4-follow-acts{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}.mp4-runner{align-items:center;margin-top:0}.mp4-runner .mp4-agent-select{width:auto;flex:1;min-width:0}
 /* 项目 index */
 .mp4-index{width:100%;height:100%;overflow:auto;background:var(--mp4-bg)}
@@ -5123,18 +5092,6 @@ html[data-mira-ball=large]{--mira-pet-room:136px}
 .mp4-entry{position:relative;display:inline-flex}
 
 .mp-workspace-recent .mp4-dot{margin-top:8px}
-/* the ball: opens the assistant */
-.mp4-ball-wrap{position:fixed;right:22px;bottom:22px;z-index:40;display:flex;flex-direction:column;align-items:flex-end;gap:10px;pointer-events:none}
-/* DSH's overlay layer turns pointer events off for everything inside it; the ball and its panel take them back. */
-.mp4-ball-wrap>*,.mp4-ball-wrap>* *{pointer-events:auto!important}
-.mp4-ball{all:unset;cursor:pointer;position:relative;display:inline-flex;align-items:center;justify-content:center;border-radius:8px}.mp4-ball:focus-visible{outline:2px solid var(--mp4-fg3);outline-offset:2px}
-.mp4-ball:hover{transform:translateY(-1px)}
-.mp4-ball-bubble{max-width:300px;display:flex;align-items:flex-start;gap:4px;background:var(--rx-gray-1,#FFFFFF);color:var(--mp4-fg);border-radius:8px;box-shadow:0 0 0 .5px rgba(0,0,0,.1),0 12px 32px -12px rgba(0,0,0,.3);padding:8px 6px 8px 12px;font-size:13px;line-height:1.6}
-.mp4-ball-bubble>button:first-child{all:unset;cursor:pointer;flex:1}
-/* While the ball is on screen it owns the bottom-right corner of the right panel: end the tab's scroll
-   area above it, so no row can ever slide under the ball (padding alone still lets content scroll past). */
-html[data-mira-ball] .mp4-tabpane{height:max(0px,calc(100% - var(--mira-pet-room,112px)));-webkit-mask-image:linear-gradient(to bottom,#000 calc(100% - 22px),transparent);mask-image:linear-gradient(to bottom,#000 calc(100% - 22px),transparent)}
-html[data-mira-ball] .mp4-panel-body{margin-bottom:var(--mira-pet-room,112px);-webkit-mask-image:linear-gradient(to bottom,#000 calc(100% - 22px),transparent);mask-image:linear-gradient(to bottom,#000 calc(100% - 22px),transparent)}
 /* Our cards on DSH's 开始 page: DSH's own guide card, and the cell of a card that belongs to another level hidden */
 .mp4-guide-entry{box-sizing:border-box;width:100%;min-height:40px;display:flex;align-items:center;gap:10px;padding:8px 20px;color:var(--dsw-alias-label-primary,var(--rx-gray-12));font:inherit;text-align:left;background:var(--dsw-alias-bg-layer-1,#fff);border:.5px solid var(--dsw-alias-border-l3,var(--rx-gray-6));border-radius:var(--dsl-guide-entry-radius,16px);cursor:pointer}
 .mp4-guide-entry:hover{background:var(--dsw-alias-interactive-bg-hover,var(--rx-gray-3))}
@@ -5328,8 +5285,7 @@ div:has(> [data-slot="sidebar.right.tab.guide.entry"] [data-mira-guide-skip]){di
 			const views = { request_decision: DecisionToolView, update_card: UpdateCardView, inbox_read: InboxReadView, post_message: PostMessageView, message_coordinator: MessageCoordinatorView, withdraw_decision: WithdrawDecisionView,
 				open_thread: OpenThreadView, add_member: AddMemberView, message_thread: MessageThreadView, list_threads: ListThreadsView, read_thread: ReadThreadView, no_reply: NoReplyView };
 			for (const [tool, View] of Object.entries(views)) ctx.effect(() => ctx.slots.inject("tool.call.toolview", () => ctx.slots.register({ name: "tool.call.toolview", key: tool, locale: NS, inject: (sessionId) => ({ sessionId }) }, View)), `mira-projects: ${tool} view`);
-			// The ball floats over every screen except the assistant itself, and opens it.
-			ctx.effect(() => ctx.slots.inject("shell.overlay", () => ctx.slots.register({ name: "shell.overlay", id: "mira-ball", order: 50 }, MiraBall)), "mira-projects: floating ball");
+			// No desktop pet in the first release (the owner, 2026-11-18): the summon key below is the way in.
 			ctx.effect(() => ctx.slots.inject("shell.overlay", () => ctx.slots.register({ name: "shell.overlay", id: "mira-studio", order: 60 }, LookStudioHost)), "mira-projects: look studio");
 			// The summon key (⌥M unless the owner picked another or none): a capture listener, as DSH's shortcut service refuses some combinations.
 			ctx.effect(() => {
