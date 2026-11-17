@@ -42,7 +42,7 @@ https://github.com/user-attachments/assets/beab0a8e-4ffb-4a50-93f4-6d63dc568de4
 
 [演示片 tacit-film.mp4（1.0 发布版）](https://github.com/hovocope135-tech/DS-buddy/releases/download/v1.0.0/tacit-film.mp4)
 
-![DS-buddy 演示：交代一件事，助理开工、问清、交付](docs/launch/demo.gif)
+![DS-buddy 上手：建项目，说一句目标，没说清的先问你，交付直接预览，在「待你决定」里拍板](docs/readme/onboarding.gif)
 
 ## 使用说明
 
