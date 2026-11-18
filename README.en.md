@@ -1,63 +1,126 @@
 # DSH-projects
 
-**Exploring the best way for people and AI to work together**
+**Your next agent product may not need agents. Exploring the best way for people and AI to work together.**
 
 [中文](README.md)
 
-For the past six months I have kept running into the same kind of tiredness: the models keep getting stronger, and my own output hasn't kept up. Most of my day goes into switching between a few conversation windows, carrying one side's output over and filling in what the other side missed. Somewhere along the way I became the glue between AIs, with no time left to think the direction through.
+Do you keep switching between sessions, and does setting up each agent give you a headache? Do you wish you could keep a large number of agent conversations in hand without carrying context back and forth yourself?
 
-The problem isn't that AI isn't smart enough. It's that the bandwidth between people and AI is too limited. I built DSH-projects to explore a new way of interacting, one that takes this needless layer of friction out of working with AI.
+If you are also looking for a better way to manage context, DSH-projects wants to offer the next way for people and AI to work together: hide every detail that isn't needed, let people focus on what really matters, and bring down the cost of working with AI.
 
-Here are the core principles we built DSH-projects on:
+These are the starting points DSH-projects is built on, and its main differences from similar agent products:
 
-**Most of the time, you don't need multiple agents. Managing agents is, at heart, managing context.**
+**1. Organise context around the nature of the task itself. Managing multiple agents is a false problem; the only thing that needs managing is context.**
 
-Many products put the way human teams are organised straight onto AI: a pile of agents, roles, channels, tickets. It looks busy, but it is still a simulated meeting room, with a human division of labour covering up context that has been split apart. To a model, a fork shares and multiple agents pass things along. Whatever is passed along loses something. Rather than having agents message each other, fork the subtasks from one complete context. For most complex problems, that is enough.
+- Only when a task by its nature needs splitting do we need multiple agents with different context. Otherwise multiple agents are a shallow imitation of a human meeting room. What really improves how well a task gets done is not shallow adversarial review, it is keeping the task's Goal document in good shape from the start.
+- Multiple agents still have value, but we don't need the concept of an agent. In DSH-projects you can still open several sessions in parallel at the task level, but we don't put the agent concept forward. We think the only difference a user needs to perceive is the model.
 
-**Build context around goals (loops).**
+**2. Take in as much context as possible, and free people from the chore of organising it.**
 
-The key to using AI well is to split the work into a structure that can be verified and has a clear goal: one goal and one loop at a time. Without role play to divide the work, what needs maintaining is the tasks themselves. In DSH-projects the assistant keeps a set of task files (goals): what the goal is, what counts as done and where the context lives are all written down. Every core thread has a stable context; add automations that run on a schedule, and everyday work turns into loops that run without anyone watching.
+- DSH-projects builds on the open-source project screenpipe and can collect information from every channel on your machine, help you draft email replies, and think what you are thinking.
+- Wherever you are, you don't carry context around and you don't worry about environments, files or opening new conversations. The personal assistant organises and assigns the context for you.
 
-**We don't need the concept of an agent. The runtime details and the dynamic, fragmented state should stay hidden.**
+![Left: a common multi-agent product. Right: DSH-projects](docs/readme/arch-compare.png)
 
-I would go further: the agent itself is a needless middle layer. In products like Multica, you configure Skills and runtimes for your agents before any work starts. But tools and environments are just task context; they should grow as the project needs them, not be fixed in advance. So DSH-projects keeps the fragmented runtime state underneath and exposes only the model. Every extra layer of agent is one more thing to keep in your head. The one thing you need to care about is a sentence per project on which models to prefer.
+Left: a common multi-agent product, where context, Skills and runtime are bound into each agent. Right: DSH-projects, where one personal assistant serves many projects, each project is split into tasks along context boundaries, and the runtime is decoupled from the context and can be swapped per task. The numbers refer to the sections of the [architecture article](https://hovocope135-tech.github.io/DSH-projects/site/blog/en/deep/). The figure's labels are in Chinese.
 
-**You can do without the agent abstraction, but every runtime should stay visible.**
+If you want to try the next generation of AI too: your next agent product may not need agents.
 
-Hiding concepts doesn't mean building a black box. When tasks run on their own in the background, people need something to rely on. So while it takes away the agent abstraction, DSH-projects gives every run a clear view: when the assistant was woken and by what, which tools it called in order, and how it turned out, all in the developer view.
+**Install DSH-projects and try it.**
 
-**Take in as much context as possible, use the best model to assign the work, then let the AI explore.**
+## Getting started
 
-Building this product has also meant slowly letting go of control. I believe more and more that enough context and room to explore beat any amount of prompt polishing. DSH-projects turns what you do on your computer into a timeline and hands it to the model as background; what the model is unsure about lands on a board called Waiting on you. You make the calls at the key points, and it finds the rest of the way.
+The interface is in Chinese for now, so the names on screen are given in Chinese below.
 
-**A small suggestion: give the personal assistant the best model you can.**
+### 1. Set up your assistant
 
-The personal assistant, the coordinator, does the work that takes the most judgement: understanding what you mean and breaking vague ideas into tasks of the right size. If that first split goes wrong, no speed afterwards will save it. So give it the best model you can use, such as Claude Opus 5.5 or GPT-6 Astra. Put your best tool where it counts.
+Install the plugin from npm, one command:
 
-Install it and try.
+```sh
+dsh plugin --profile web add deepseek-harness-projects-plugin@preview
+dsh --profile web        # start it and open the address it prints
+```
 
-## How to use it
+Before you start you need DeepSeek Harness (tested on 0.2.1; `npm install -g @deepseek-ai/dsh` if you don't have it), Node 24 or later, and an API key for your model.
 
-The interface is in Chinese for now.
-
-**Install.** You need DeepSeek Harness (tested on 0.2.1) and Node 24 or later. If you do not have DeepSeek Harness yet: `npm install -g @deepseek-ai/dsh`.
+<details>
+<summary>Install from source</summary>
 
 ```sh
 git clone https://github.com/hovocope135-tech/DSH-projects
 cd DSH-projects/plugin
 dsh plugin --profile web add "$(pwd)"    # add the plugin to DeepSeek Harness
-dsh --profile web                        # start it and open the address it prints
+dsh --profile web
 ```
 
-The sidebar gains a personal assistant and projects. The personal assistant is called Tacit by default and watches all your projects. With the Claude Code or Codex command line installed, tasks can go to them; with the Feishu command line (lark-cli) installed and authorised, Tacit can read your Feishu messages, read-only.
+</details>
 
-**Hand over a job.** Create a project; you can give it a folder for the executor to work in. In the project's conversation, say in one sentence what to do, where the context is and what counts as good. The project assistant starts what it can and asks about what you left unclear.
+On first open, follow the guide: pick the assistant's traits, give it a name, and choose a shortcut to call it up. It is called Tacit by default.
 
-Open a task to see all of its context: your own words, what counts as done, what it produced, the files it read, its progress.
+To let it know more, connect Feishu and your computer's files in **助理设置** (assistant settings), or turn on screen recording. All of it is optional and read-only, and it works with nothing connected.
 
-**Accept and decide.** Finished tasks, Feishu messages waiting for your reply and Tacit's own suggestions all land in Waiting on you. On a computer with Screenpipe, what you do on screen becomes a timeline every 10 minutes, filed under a project when it is clear which one.
+### 2. Hand everything to your personal assistant
 
-The cards have no buttons. Click a task card to open the task; delivered pages, images and documents preview in place. Accept it, or say exactly what to change. Click a message card and a whole request is written into the input box for you to edit and send.
+Tell the personal assistant what you need. It turns your request into a project by itself:
+
+> We're hiring a front-end engineer who leans towards interaction and motion. Create a project 「前端招聘」 and start with two things: write a second-interview question set interview.md, three questions on motion and interaction details, each with scoring notes; then build a hiring page jobs.html that can go on the website.
+
+![One sentence to the personal assistant: it creates the project, splits it into two tasks, and the first delivery comes back for acceptance](docs/readme/assistant-flow.gif)
+
+Say what to do and what counts as good. How to split it into tasks is its call. Where something is unclear, it asks you first.
+
+You don't have to watch. When a task is done it shows up under **待你决定** (waiting on you) on the right, for you to accept.
+
+### 3. Manage tasks inside a project
+
+Every project has several tasks. Open the project on the left, and **项目任务** (project tasks) on the right lists them with their states.
+
+![Open a task: its detail panel on the right updates as the task moves, through delivery and acceptance](docs/readme/task-context.gif)
+
+Each task has its own context. Open a task, and **任务详情** (task detail) on the right is that context:
+
+- **背景 (background)**: what this job is, and your own words at the time.
+- **怎么算完成 (what counts as done)**: the criteria written down when work starts, checked one by one at delivery.
+- **进展 (progress)**: every step from opening the task to delivery, including the questions it asked you and your answers.
+- **读过的文件 (files read)**: what it read for this job.
+- **产出 (output)**: the delivered files. Each revision adds a version.
+
+This context keeps updating as the task moves, so whenever you open it you see the latest. If another model or executor takes over, it reads the same context.
+
+Delivered pages, images and documents open right in **交付** (delivery). If it's fine, click **验收通过** (accept). To change something, click **请求修改** (request changes) and say what to change.
+
+### 4. Keep working: context keeps accumulating, and your assistant understands you better and better
+
+**Computer History** turns what you do on your computer into a timeline: one entry per 10 minutes, saying what you were doing and which apps you used, filed under a project when it is clear which.
+
+![The timeline, and the personal assistant answering "what did I do today" from it (demo data)](docs/readme/timeline.gif)
+
+After that, when you ask 「今天做了什么」 (what did I do today), it answers with what you did yourself and what the projects produced, side by side. When you hand over something new, you don't explain the background from scratch.
+
+Screen recording is off by default. It needs Screenpipe on your machine, and you turn it on under **活动与设备** (activity and devices) in assistant settings.
+
+It remembers your habits too. Say 「记住：我看东西习惯先看结论」 (remember: I read the conclusion first), and every conversation after that follows it.
+
+### 5. Come back later
+
+Before you go offline, tell Tacit what to do:
+
+> I'm going offline and will check in the morning. Finish these three things overnight: an English version of the hiring page, jobs-en.html; a job description for the hiring site, jd.md; and a note on the interview process, process.md, saying what the first, second and final interviews each look at.
+
+When you come back, open **待你决定** on the right:
+
+- Under **项目进展** (project progress) are the tasks that were delivered and wait for your acceptance.
+- Under **新消息与建议** (messages and suggestions) are the cards Tacit left for you overnight, three at most: one thing that could be done, one thing worth a look, one thing it wants to say. Click a card and a sentence is written into the input box. Edit it, then send.
+
+![The board in the morning: three deliveries waiting for acceptance, and the three cards Tacit left overnight](docs/readme/morning-board.png)
+
+You can also just ask it what it did overnight. It gives the conclusion first, then the details.
+
+![Asking what it did overnight: the conclusion first, then the details](docs/readme/morning-answer.png)
+
+At night it only reads: it sends no messages for you, changes no files and opens no tasks. Without a word from you it makes no decisions and accepts nothing.
+
+## Reference
 
 **Models and executors.** Each project can have a one-sentence model strategy: write it yourself, or tell Tacit. Each task can switch its executor between DeepSeek Harness, Claude Code and Codex, and its model separately.
 
@@ -87,10 +150,10 @@ It doesn't send messages in your name. Without a word from you it makes no decis
 | A task stopped at failed | Open the task and read the last progress entry. It is usually a model or network error; tell it to carry on. |
 | Nothing happens after switching to Codex | Codex has to be logged in on this machine first. |
 
-## More
+## More thinking
 
-- [Introduction, full version](https://hovocope135-tech.github.io/DSH-projects/site/blog/en/): the long version of this introduction
-- [Architecture](https://hovocope135-tech.github.io/DSH-projects/site/blog/en/deep/): how it is built
+The steps above get you started. Why DSH-projects is built this way, how context is organised, assembled and collected, some early numbers and what is still unsolved are in a separate long piece: [Managing agents is managing context](https://hovocope135-tech.github.io/DSH-projects/site/blog/en/deep/).
+
 - [Product page](https://hovocope135-tech.github.io/DSH-projects/site/), [film](https://github.com/hovocope135-tech/DSH-projects/releases/latest/download/tacit-film.mp4)
 - [Getting started](docs/GETTING-STARTED.md), [features](docs/FEATURES.md) and [test report](docs/TESTING.md) (Chinese)
 
