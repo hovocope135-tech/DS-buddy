@@ -4,11 +4,11 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>管理 agent，就是管理 context | DSH-projects</title>
-<meta name="description" content="过去一年，单任务的 agent 已经证明，模型可以用工具把一件复杂的事做完，越来越少需要人盯着每一步。多个 agent 同时干活也变得可行。人的位置随之上移，从执行移到决策和验收。">
+<meta name="description" content="你的下一个 Agent 产品，不一定需要有 Agent。这一篇写 DSH-projects 为什么这样设计：上下文怎么组织、拼装和采集，初步数据，和还没解决的问题。">
 <meta property="og:type" content="article">
 <meta property="og:site_name" content="DSH-projects">
 <meta property="og:title" content="管理 agent，就是管理 context">
-<meta property="og:description" content="过去一年，单任务的 agent 已经证明，模型可以用工具把一件复杂的事做完，越来越少需要人盯着每一步。多个 agent 同时干活也变得可行。人的位置随之上移，从执行移到决策和验收。">
+<meta property="og:description" content="你的下一个 Agent 产品，不一定需要有 Agent。这一篇写 DSH-projects 为什么这样设计：上下文怎么组织、拼装和采集，初步数据，和还没解决的问题。">
 <meta property="og:url" content="https://hovocope135-tech.github.io/DSH-projects/site/blog/deep/">
 <meta property="og:image" content="https://hovocope135-tech.github.io/DSH-projects/site/blog/img/rd2-hero.jpg">
 <meta name="twitter:card" content="summary_large_image">
@@ -36,14 +36,16 @@
       <p class="kick">我的 AI 产品实践</p>
       <h1>管理 agent，就是管理 context</h1>
       <p class="meta">DSH-projects <i>·</i> 2026/11/16</p>
-      
+      <p class="dek">你的下一个 Agent 产品，不一定需要有 Agent。这一篇写 DSH-projects 为什么这样设计：上下文怎么组织、拼装和采集，初步数据，和还没解决的问题。</p>
     </header>
 <h2 id="s1">1. 从 agent 到 context</h2>
 <p>过去一年，单任务的 agent 已经证明，模型可以用工具把一件复杂的事做完，越来越少需要人盯着每一步。多个 agent 同时干活也变得可行。人的位置随之上移，从执行移到决策和验收。</p>
 <p>多数多 agent 产品组织工作的方式，却是照着人类团队来的：给 agent 起名字、分角色，用频道、工单和 @ 把它们连起来。用户被留在中间：A 的结论要复制给 B，B 需要的背景要再讲一遍，谁跑完了、谁卡住了要有人盯着。一件事做得好不好，看模型；同时推进几件事，卡在人的注意力上。</p>
 <p>DSH-projects 的早期版本也是这样做的。每个项目是一个群聊，项目助理按需创建角色，每个角色有名字、一两句人设和自己的头像。到 11 月 12 日，12 个项目里一共建过 18 个角色。但在代码里，一个角色只贡献三样东西：名字、人设和默认模型。会话按任务开，不按角色开。模型每次看到的是这件事的上下文，角色只是贴在上面的标签。</p>
 <p>于是我去掉了角色这一层。现在每个项目只有一个执行者，界面上显示的是它用的模型。背后的判断是：一个 agent 就是一份上下文加一个模型，管理 agent，就是管理 context。设计问题也随之变成：每一次模型调用，它看到什么，这份上下文由谁维护，拼一次要花多少。</p>
-<p>围绕这个问题，DSH-projects 定了五个目标：</p>
+<p>由此有两条原则，也是 DSH-projects 和同类产品最主要的差别：</p>
+<ul><li><strong>一切围绕任务本身的属性去组织 context。</strong> 只有任务本身需要不同的上下文时才拆开；不需要时硬拆，多 agent 只是对人类会议室的模拟。并行仍然有价值，在 DSH-projects 里它发生在任务这一层：每个任务一个会话，可以同时开多个。用户只需要感知模型的差别。</li><li><strong>最大化吸收 context。</strong> 上下文从屏幕、消息和文件里自己进来，由个人助理分到对应的项目和任务，人不用搬运。</li></ul>
+<p>落到设计上，是五个目标：</p>
 <ul><li><strong>原样</strong>：用户说的话逐字到达干活的模型，中间不经转述。</li><li><strong>隔离</strong>：每件事有自己的上下文，不背着别的事的历史。</li><li><strong>稳定</strong>：上下文只在末尾追加，前缀保持不变，缓存能够复用。</li><li><strong>自来</strong>：上下文从屏幕、消息和文件里自己进来，不靠用户喂。</li><li><strong>少打扰</strong>：只在拍板和验收的时候找用户。</li></ul>
 <p>下图是整体结构。上下文包见第 2 节，拼装与缓存见第 3 节，采集见第 4 节，看板见第 5 节。</p>
 <figure class="dia"><svg viewBox="0 0 680 300" role="img" aria-label="DSH-projects 的整体结构。蓝色是上下文层；每件事从它 fork 一份去做，结果回到「待你决定」，用户的每一个动作都写回上下文层。"><defs><marker id="ar-tacit" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path class="d-h" d="M0 0L10 5L0 10z"/></marker><marker id="ar-tacits" viewBox="0 0 10 10" refX="1" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path class="d-h" d="M10 0L0 5L10 10z"/></marker></defs><rect class="d-n" x="20.0" y="43.0" width="130" height="30" rx="6"/><text class="d-t" x="85" y="62.5" text-anchor="middle">你说的话</text><path class="d-e" d="M150 58 H170"/><rect class="d-n" x="20.0" y="85.0" width="130" height="30" rx="6"/><text class="d-t" x="85" y="104.5" text-anchor="middle">屏幕</text><path class="d-e" d="M150 100 H170"/><rect class="d-n" x="20.0" y="127.0" width="130" height="30" rx="6"/><text class="d-t" x="85" y="146.5" text-anchor="middle">飞书</text><path class="d-e" d="M150 142 H170"/><rect class="d-n" x="20.0" y="169.0" width="130" height="30" rx="6"/><text class="d-t" x="85" y="188.5" text-anchor="middle">电脑里的文件</text><path class="d-e" d="M150 184 H170"/><path class="d-e" d="M170 58 V184"/><path class="d-e" d="M170 121 H198" marker-end="url(#ar-tacit)"/><rect class="d-ctx" x="200.0" y="30.0" width="210" height="182" rx="6"/><text class="d-t d-b" x="305" y="56" text-anchor="middle">上下文层</text><rect class="d-n" x="220.0" y="72.0" width="170" height="28" rx="6"/><text class="d-t" x="305" y="90.5" text-anchor="middle">事件日志</text><rect class="d-n" x="220.0" y="106.0" width="170" height="28" rx="6"/><text class="d-t" x="305" y="124.5" text-anchor="middle">时间线</text><rect class="d-n" x="220.0" y="140.0" width="170" height="28" rx="6"/><text class="d-t" x="305" y="158.5" text-anchor="middle">记忆</text><rect class="d-n" x="220.0" y="174.0" width="170" height="28" rx="6"/><text class="d-t" x="305" y="192.5" text-anchor="middle">项目 → 任务</text><path class="d-e" d="M410 58 H458" marker-end="url(#ar-tacit)"/><rect class="d-n" x="460.0" y="43.0" width="120" height="30" rx="6"/><text class="d-t" x="520" y="62.5" text-anchor="middle">任务</text><path class="d-e" d="M580 58 H606"/><path class="d-e" d="M410 121 H458" marker-end="url(#ar-tacit)"/><rect class="d-n" x="460.0" y="106.0" width="120" height="30" rx="6"/><text class="d-t" x="520" y="125.5" text-anchor="middle">任务</text><path class="d-e" d="M580 121 H606"/><path class="d-e" d="M410 184 H458" marker-end="url(#ar-tacit)"/><rect class="d-n" x="460.0" y="169.0" width="120" height="30" rx="6"/><text class="d-t" x="520" y="188.5" text-anchor="middle">任务</text><path class="d-e" d="M580 184 H606"/><text class="d-a" x="434" y="46" text-anchor="middle">fork</text><path class="d-e" d="M606 58 V270"/><path class="d-e" d="M606 270 H597" marker-end="url(#ar-tacit)"/><text class="d-m" x="614" y="222" text-anchor="start">结果</text><text class="d-m" x="614" y="238" text-anchor="start">回到</text><text class="d-m" x="614" y="254" text-anchor="start">一处</text><rect class="d-n" x="445.0" y="253.0" width="150" height="34" rx="6"/><text class="d-t" x="520" y="274.5" text-anchor="middle">待你决定</text><path class="d-e" d="M445 270 H339" marker-end="url(#ar-tacit)"/><text class="d-m" x="392" y="260" text-anchor="middle">该你了才找你</text><rect class="d-you" x="273.0" y="255.0" width="64" height="30" rx="6"/><text class="d-t" x="305" y="274.5" text-anchor="middle">你</text><path class="d-e" d="M305 255 V214" marker-end="url(#ar-tacit)"/><text class="d-m" x="296" y="240" text-anchor="end">拍板、验收、要改，都记回去</text></svg><figcaption>DSH-projects 的整体结构。蓝色是上下文层；每件事从它 fork 一份去做，结果回到「待你决定」，用户的每一个动作都写回上下文层。</figcaption></figure>
@@ -105,7 +107,7 @@
 <h2 id="s7">7. 开放问题</h2>
 <ul><li><strong>项目由谁来建</strong>：任务由 AI 拆，项目只在用户开口时才建。AI 是否应当主动提出新项目、提到什么程度，还没有定论。</li><li><strong>时间线的准确性</strong>：相邻几窗容易被前一窗带偏，写成同一件事。原始记录保留着，但需要人来发现。</li><li><strong>执行者的切换</strong>：切换只在一轮结束后生效，运行中途如何交接还没有好方案。Claude Code 和 Codex 作为执行者时没有权限确认，也没有沙箱；Codex 还没有验证到跑完一个完整任务。</li><li><strong>拼装与缓存</strong>：缓存读取比例最近在下降，每次开工时上下文怎样拼最合适，需要更多数据。</li><li><strong>污染与注入</strong>：采集的上下文越多，越要防污染和提示词注入。信任标记是第一步，是否足够要看真实使用。</li><li><strong>反馈</strong>：反馈目前主要靠人，哪些环节可以交给自动检查，还在尝试。</li></ul>
 <h2 id="s8">8. 结语</h2>
-<p>回头看，DSH-projects 做的事可以收成一句话：去掉 agent 这一层，把上下文按任务组织起来，让人只在拍板和验收时出现。执行者可以换，模型可以换，留下来的是每件事的上下文。</p>
+<p>回头看，DSH-projects 做的事可以收成一句话：不把 agent 当成要管理的对象，把上下文按任务组织起来，让人只在拍板和验收时出现。并行还在，发生在任务这一层；执行者可以换，模型可以换，留下来的是每件事的上下文。所以下一个 agent 产品，不一定需要有 agent。</p>
 <p>里面那个一直在的助理默认叫 Tacit，取 tacit knowledge（默会知识）的意思：说不清，却一直在起作用。我希望它在用户开口之前，就已经了解和这件事有关的上下文。</p>
 <p>DSH-projects 是 DeepSeek Harness 的一个开源插件，代码在 <a href="https://github.com/hovocope135-tech/DSH-projects">GitHub</a>，MIT 许可。</p>
   </article>

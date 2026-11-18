@@ -1,5 +1,6 @@
 ^ Notes on building AI products
 # Managing agents is managing context
+> Your next agent product may not need agents. This piece is about why DSH-projects is built the way it is: how context is organised, assembled and collected, some early numbers, and what is still unsolved.
 
 ## 1. From agents to context
 
@@ -11,7 +12,12 @@ The early version of DSH-projects worked that way too. Every project was a group
 
 So I removed the role layer. A project now has one executor, and the interface shows the model it runs on. The judgment behind it: an agent is a piece of context plus a model, and managing agents is managing context. The design question becomes: for each model call, what does the model see, who maintains that context, and what does it cost to assemble?
 
-Around that question, DSH-projects has five goals:
+Two principles follow, and they are where DSH-projects differs most from similar products:
+
+- **Organise context around the task itself.** Work is worth splitting only when the task really needs different context. Split without that need, and multiple agents are an imitation of a human meeting room. Running things in parallel still has value, and in DSH-projects it happens at the task level: each task is one session, and several can run at once. The only difference a user needs to see is the model.
+- **Take in as much context as possible.** Context comes in from the screen, messages and files by itself, and the personal assistant assigns it to the right project and task. The person doesn't carry it around.
+
+In the design, that becomes five goals:
 
 - **Verbatim**: what the user says reaches the working model word for word, with no paraphrase in between.
 - **Isolated**: each job has its own context and doesn't carry the history of other jobs.
@@ -159,7 +165,7 @@ Both kinds of session have dropped over the last three days, and the cause hasn'
 
 ## 8. Closing
 
-Looking back, what DSH-projects does fits in one sentence: remove the agent layer, organise context per task, and have people appear only to make the call and accept the result. Executors can be swapped, models can be swapped, and what stays is the context of each job.
+Looking back, what DSH-projects does fits in one sentence: stop treating agents as the thing to manage, organise context per task, and have people appear only to make the call and accept the result. Work still runs in parallel, at the task level. Executors can be swapped, models can be swapped, and what stays is the context of each job. So the next agent product may not need agents.
 
 The assistant that is always there is called Tacit by default, after tacit knowledge: what can't quite be put into words and keeps working anyway. I want it to know the background of a job before the user opens their mouth.
 
