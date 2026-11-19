@@ -807,7 +807,7 @@ test('bug 20: the coordinator prompt treats 「收了、关掉」 as acceptance 
   assert.ok(accept > 0 && archive > accept, '验收那句在前，归档那句只认「算了 / 不做了 / 归档吧」')
   assert.ok(!/用户说「算了、归档吧」时，回一句告诉他/.test(prompt), 'r14 的旧措辞已去掉')
   // r18 (cloud-run-15 #283): the closing notice must not re-list what still waits right after the coordinator answered it.
-  assert.match(prompt, /关闭的通报只说哪条关了.*别在通报里再列一遍/)
+  assert.match(prompt, /已完成：多半是他刚验收过、你也刚说过在收尾，不再通报，直接 no_reply/)
 })
 
 test('bug 21: the worker prompt says a chat question the coordinator relayed along is his to answer, not to relay back', () => {
@@ -889,7 +889,7 @@ test('r21: acceptance and closing are state, not decisions; the coordinator neit
   const mira = rolePrompt(project, MIRA)
   assert.match(mira, /「X 已验收」「三条线程都关单了」是状态不是决定，不进 decisions/)
   const coordinator = rolePrompt(project, COORDINATOR)
-  assert.match(coordinator, /或记忆助理刚说过「只剩 X 在等你」，就别在通报里再列一遍/)
+  assert.match(coordinator, /已完成：多半是他刚验收过、你也刚说过在收尾，不再通报，直接 no_reply/)
   assert.match(coordinator, /别提前宣布「到这就全收尾了」/)
   assert.doesNotMatch(mira, /别提前宣布/)
   assert.doesNotMatch(rolePrompt(project, workerKey('t_x')), /是状态不是决定/)
@@ -916,7 +916,7 @@ test('r22: only the shapes of an acceptance count as one; a closing notice names
   env.actions.assistantPost(project, MIRA, '记下了：卡片样式已验收。现在只剩 recap 接口待你验收。')
   env.actions.updateCard(project, workerKey(threadId), { state: 'done', summary: '用户在群聊里验收，协调员转达' })
   const closed = [...project.events].reverse().find(e => e.type === 'thread.updated' && e.patch?.state === 'done')
-  assert.match(renderItem(project, closed), /note="记忆助理 \d+ 秒前刚在群聊说过话：关闭通报只说一句「出卡片样式」已关单/)
+  assert.match(renderItem(project, closed), /note="记忆助理 \d+ 秒前刚在群聊说过话：「出卡片样式」完成这件事不用再通报，no_reply/)
   const quiet = env.actions.createProject({ name: '没人刚说过话' })
   const q = env.store.get(quiet.projectId)
   const other = env.actions.openThread(q, { title: '建 hello 笔记', brief: '建', assignee: '工程师' })

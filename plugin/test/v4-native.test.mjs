@@ -4,7 +4,7 @@ import { mkdtempSync, rmSync } from 'node:fs'
 import { join } from 'node:path'
 import { tmpdir } from 'node:os'
 import { ProjectStore, MIRA, COORDINATOR, EXECUTOR_ID, OLD_COORDINATOR_PERSONA, workerKey } from '../lib/store.js'
-import { rolePrompt, wakeText } from '../lib/protocol.js'
+import { rolePrompt, wakeText, cadenceLine } from '../lib/protocol.js'
 import { Actions, finalText } from '../lib/actions.js'
 import { ensureHub, HUB_ID, hubRolePrompt, renderHubItem, threadNow } from '../lib/hub.js'
 import { PersonalMira } from '../lib/personal.js'
@@ -191,7 +191,12 @@ test('in a task session the executor answers the owner in plain text, and no rol
   const f = fixture(t)
   const worker = rolePrompt(f.project, workerKey(f.threadId))
   // The owner reads a task's DSH session directly, so text is seen there; only woken turns need a platform tool to be seen.
-  assert.match(worker, /直接用文字回答他，答完就结束；不要再用 post_message 把同样的话发一遍/)
+  // 2026-11-19, after Claude Projects' thread prompt: one outlet per turn. Files go out with the answer in one post_message,
+  // never as a post plus a text reply that narrates where the post went (「已发到任务消息里」).
+  assert.match(worker, /一轮只用一个出口，同一件事不说两遍/)
+  assert.match(worker, /直接用文字回答，答完就结束/)
+  assert.match(worker, /要交文件，就用一次 post_message 把回答和文件一起发出/)
+  for (const key of [COORDINATOR, MIRA, workerKey(f.threadId)]) assert.match(rolePrompt(f.project, key), /别讲幕后怎么运作：不说「线程」「群聊」「卡片」「收件箱」「任务消息」/)
   assert.match(worker, /被 <mira-wake> 唤醒的回合，要让用户知道的事只用平台工具发/)
   assert.match(worker, /回合里写下的纯文本不进项目记录、不算回复，但用户打开这个会话也看得到/)
   assert.doesNotMatch(worker, /谁也看不到/)
@@ -430,4 +435,19 @@ test('Mira\'s conversation is her own DSH session: words typed there are the own
   const prompt = hubRolePrompt(hub)
   assert.match(prompt, /直接打字的那一轮他就在看你这个会话：直接用文字回答/)
   assert.match(prompt, /填 "latest"/)
+})
+
+test('a task wake says how long ago the owner wrote there and how many messages went out since', () => {
+  const now = 1_800_000_000_000
+  const project = { events: [
+    { type: 'message.posted', threadId: 't_a', author: { kind: 'human', id: 'owner' }, at: now - 45 * 60e3 },
+    { type: 'message.posted', threadId: 't_a', author: { kind: 'assistant', id: 'executor' }, at: now - 40 * 60e3 },
+    { type: 'message.posted', threadId: 't_b', author: { kind: 'assistant', id: 'executor' }, at: now - 39 * 60e3 },
+    { type: 'message.posted', threadId: 't_a', author: { kind: 'assistant', id: 'executor' }, at: now - 30 * 60e3 },
+  ] }
+  assert.equal(cadenceLine(project, workerKey('t_a'), now), '他上次在这个任务里说话是45 分钟前，那之后你发了 2 条消息。')
+  assert.equal(cadenceLine(project, workerKey('t_c'), now), '', '他没在这个任务里说过话就不写')
+  assert.equal(cadenceLine(project, COORDINATOR, now), '')
+  project.events.push({ type: 'message.posted', threadId: 't_a', author: { kind: 'human', id: 'owner' }, at: now - 20e3 })
+  assert.equal(cadenceLine(project, workerKey('t_a'), now), '他上次在这个任务里说话是不到 1 分钟前，那之后你发了 0 条消息。')
 })

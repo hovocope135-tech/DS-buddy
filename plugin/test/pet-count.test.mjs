@@ -113,3 +113,23 @@ test('DESIGN.md direction 2 (owner 2026-11-19): the three core tabs share one sc
   assert.match(source, /\.mp4-pick-on,\.mp4-pick-on:hover\{border-color:transparent;box-shadow:0 0 0 1\.5px var\(--mp4-fg\)\}/)
   assert.doesNotMatch(source.slice(source.indexOf('function LookStudio('), source.indexOf('const titles = ["形象", "性格与呼出"];')), /mp4-chips" \}, Object\.keys\(LOOK_LABELS\.(shape|eyes|accessory)\)/, 'body, eyes and accessories are pictures, not text pills')
 })
+
+test('DESIGN.md everywhere (owner 2026-11-20): every rule in the stylesheet uses type 14 or 16 on a 24 line, radius 12/8/4, spacing in steps of 4', () => {
+  const src = readFileSync(new URL('../lib/client.js', import.meta.url), 'utf8')
+  const start = src.indexOf('const CSS = `') + 13, css = src.slice(start, src.indexOf('\n`;', start))
+  const bad = []
+  for (const [, sel, body] of css.matchAll(/([^{}]+)\{([^{}]*)\}/g)) {
+    const where = sel.trim().split('\n').at(-1).slice(0, 60)
+    for (const [, v] of body.matchAll(/font-size:([0-9.]+)px/g)) if (!['14', '16'].includes(v)) bad.push(`${where} font-size ${v}`)
+    for (const [, v] of body.matchAll(/line-height:([0-9.]+)px/g)) if (Number(v) < 30 && v !== '24') bad.push(`${where} line-height ${v}`)
+    for (const [, v] of body.matchAll(/border-radius:([^;}]+)/g)) for (const [, n] of v.matchAll(/([0-9.]+)px/g)) if (!['0', '4', '8', '12', '999'].includes(n)) bad.push(`${where} radius ${n}`)
+    for (const m of body.matchAll(/(?<![-a-z])(?:padding|margin)(?:-[a-z-]+)?:([^;}]+)|(?<![-a-z])(?:row-|column-)?gap:([^;}]+)/g)) {
+      const val = m[1] || m[2] || ''
+      if (/calc|var\(/.test(val)) continue
+      for (const [, n] of val.matchAll(/(-?[0-9.]+)px/g)) if (Number(n) % 4) bad.push(`${where} spacing ${n}`)
+    }
+  }
+  assert.deepEqual(bad, [])
+  assert.ok(!/让 Mira/.test(src), 'buttons name the assistant, not the old product name')
+  assert.match(css, /--mp4-hair2:var\(--mp4-t-border\)/)
+})
