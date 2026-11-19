@@ -2,7 +2,7 @@
 
 Ten minutes: install DSH-projects, make your own personal assistant, hand it a first job, and accept what comes back. Each step says how to turn the thing on and how to use it. The interface is in Chinese for now, so the names on screen are given in Chinese.
 
-> The pictures show the interface in development (pixel avatar, card-style 待你决定 board, asking with a screenshot). That code is not in this repository or on npm yet; what you install today, `preview.1`, is the previous version.
+> npm's `preview.1` is still the previous interface. For the version in the pictures, use the "Install from source" lines.
 
 ## What you need
 

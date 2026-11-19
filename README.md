@@ -30,7 +30,7 @@
 
 ## 上手
 
-> 图里是开发中的新版界面（像素头像、卡片式的「待你决定」、截图来问），代码还没有推到这个仓库和 npm；现在装到的 `preview.1` 是上一版。
+> npm 上的 `preview.1` 还是上一版界面。想要图里这一版，用「想从源码装」那几行。
 
 需要 DeepSeek Harness（在 0.2.1 上测过，没装过先 `npm install -g @deepseek-ai/dsh`）、Node 24 以上，和配好的模型 API key。
 

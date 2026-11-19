@@ -30,7 +30,7 @@ If you want to try the next generation of AI too: your next agent product may no
 
 ## Getting started
 
-> The pictures show the interface in development (pixel avatar, card-style 待你决定 board, asking with a screenshot). That code is not in this repository or on npm yet; what you install today, `preview.1`, is the previous version.
+> npm's `preview.1` is still the previous interface. For the version in the pictures, use the "Install from source" lines.
 
 You need DeepSeek Harness (tested on 0.2.1; `npm install -g @deepseek-ai/dsh` if you don't have it), Node 24 or later, and an API key for your model. The interface is in Chinese for now, so the names on screen are given in Chinese.
 
