@@ -45,7 +45,7 @@ Once it opens, **个人助理** (personal assistant) and **项目** (projects) a
 
 **Make your assistant.** The first time, a dialog titled **捏一个你的助理** (make your assistant) opens:
 
-1. Under **形象** (look), pick one of six looks, then change **颜色** (colour), **身体** (body), **眼睛** (eyes) and **配饰** (accessory), and give it a name under **名字**. It is called Tacit by default.
+1. Under **形象** (look), pick one of the six under **样子** (looks), then change **颜色** (colour), **身体** (body), **眼睛** (eyes) and **配饰** (accessory). Its name goes in the box under the figure; it is called Tacit by default.
 2. Click **下一步** (next). Under **性格与呼出** (traits and shortcut), choose up to three traits, or describe it in one sentence. **呼出** is the shortcut that calls it up from anywhere, ⌥M by default.
 3. Click **完成** (done). To do it later, click **跳过** (skip); everything can be changed under **形象与快捷键** in **助理设置** (assistant settings).
 
