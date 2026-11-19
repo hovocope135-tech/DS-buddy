@@ -32,7 +32,7 @@ If you want to try the next generation of AI too: your next agent product may no
 
 > npm's `preview.1` is still the previous interface. For the version in the pictures, use the "Install from source" lines.
 
-You need DeepSeek Harness (tested on 0.2.1; `npm install -g @deepseek-ai/dsh` if you don't have it), Node 24 or later, and an API key for your model. The interface is in Chinese for now, so the names on screen are given in Chinese.
+You need DeepSeek Harness (`npm install -g @deepseek-ai/dsh`, tested on 0.2.1), Node 24 or later and an API key for your model. The interface is in Chinese for now.
 
 ```sh
 dsh plugin --profile web add deepseek-harness-projects-plugin@preview
@@ -51,11 +51,11 @@ dsh --profile web
 
 </details>
 
-How to turn each thing on and how to use it is in the [guide](docs/GETTING-STARTED.en.md).
+Detailed steps are in the [guide](docs/GETTING-STARTED.en.md).
 
 ### 1. Set up your assistant
 
-On first open, a dialog titled **捏一个你的助理** (make your assistant) lets you pick a look and traits, give it a name, and choose a shortcut that calls it up. It is called Tacit by default. To let it know more, connect Feishu or your computer's files, or turn on Computer History, under **助理设置** (assistant settings). All of it is optional and read-only.
+On first open, a dialog titled **捏一个你的助理** (make your assistant) lets you pick a look and traits, give it a name, and choose a shortcut that calls it up. It is called Tacit by default.
 
 ![First open: making your assistant](docs/readme/first-run.gif)
 
@@ -67,25 +67,25 @@ In DSH-projects we encourage you to bring every request straight to the personal
 
 ![One sentence to the personal assistant: it creates the project, two tasks start at once, and the first delivery comes back for acceptance](docs/readme/assistant-flow.gif)
 
-Say what to do and what counts as good; how to split it into tasks is its call. You don't pick an agent, you don't open a new conversation, and you don't have to watch: a finished task shows up under **待你决定** (waiting on you) on the right, for you to accept.
+A finished task shows up under **待你决定** (waiting on you) on the right, for you to accept.
 
 ### 3. Manage tasks inside a project
 
-Each task has its own long-lived context. Open a task, and **任务详情** (task detail) on the right holds the background with your own words, the output, the files it read, the progress, what counts as done, and which model the task uses. It keeps updating as the task moves, and if another model or executor takes over, it reads the same context.
+Each task has its own long-lived context. Open a task, and **任务详情** (task detail) on the right holds the background with your own words, the output, the progress, what counts as done, and which model the task uses.
 
 ![Open a project and a task: the task detail holds the background, the output, the progress, the criteria, and which model the task uses](docs/readme/task-context.gif)
 
-Delivered files open right in **交付** (delivery). If it's fine, click **验收通过** (accept); to change something, click **请求修改** (request changes) and say what to change. What comes back is version 2.
+Delivered files open right in **交付** (delivery): click **验收通过** to accept, or **请求修改** to ask for changes.
 
 ### 4. Keep working: context keeps accumulating, and your assistant understands you better and better
 
-**Computer History** turns what you do on your computer into a timeline: one entry per 10 minutes, saying what you were doing and which apps you used. It is off by default, needs Screenpipe on your machine, and is turned on under **活动与设备** (activity and devices) in assistant settings. After that you can simply ask:
+**Computer History** turns what you do on your computer into a timeline: one entry per 10 minutes, saying what you were doing and which apps you used. It needs Screenpipe on your machine and is turned on under **活动与设备** (activity and devices) in **助理设置** (assistant settings). After that you can simply ask:
 
 > 用一张可视化的图，展现我今天做了什么 (show me what I did today as a picture)
 
 ![Asking for today as a picture: a text answer first, then the data goes to a project, and ten minutes later a visual page comes back (demo data)](docs/readme/ask-visual.gif)
 
-It first answers from the timeline in text. If you want the picture, reply 「做成一页网页」 (make it a web page): it hands today's data to a project, and a page you can open directly comes back. It remembers your habits too: say 「记住：我看东西习惯先看结论」 (remember: I read the conclusion first), and every conversation after that follows it.
+It answers in text first; reply 「做成一页网页」 (make it a web page) and what comes back is the page in the picture.
 
 ### 5. Come back later
 
@@ -95,11 +95,11 @@ Before you go offline, tell Tacit what to do:
 
 ![Handing over three things before going offline; back on the board: where the project stands, what waits for acceptance, the suggestions left overnight](docs/readme/night-and-morning.gif)
 
-When you come back, look at **待你决定** on the right: **项目进展** (project progress) says where each project stands and what waits for your acceptance; **新消息与建议** (messages and suggestions) holds what it left for you overnight, and a click on one writes a sentence into the input box. You can also just ask it what happened overnight. At night it only reads: it sends no messages for you, changes no files and opens no tasks.
+When you come back, look at **待你决定** on the right: **项目进展** (project progress) says where each project stands and what waits for your acceptance, and **新消息与建议** (messages and suggestions) holds what it left for you overnight.
 
 ### 6. Frame a piece of the screen and ask
 
-You see something in another app and want to ask about it, without switching back or copying and pasting: press ⌥⇧M, frame that piece of the screen, and type a sentence in the small window that opens. The personal assistant knows your projects and tasks, and the answer appears in the same window. macOS only for now, through a small Mac helper that is not in this repository yet.
+In any app, press ⌥⇧M, frame a piece of the screen, and ask in the small window that opens; the answer appears in the same window. macOS only for now, and the helper is not in this repository yet.
 
 ![Asking with a screenshot: press ⌥⇧M, frame a piece, type a sentence in the small window, and the answer appears there (composed demonstration)](docs/readme/shot-ask.gif)
 
@@ -119,14 +119,10 @@ You see something in another app and want to ask about it, without switching bac
 
 It doesn't send messages in your name. Without a word from you it makes no decision and accepts nothing.
 
-For switching models and executors, and what to do when something goes wrong, see the [guide](docs/GETTING-STARTED.en.md#later-on).
-
 ## More thinking
 
-The steps above get you started. Why DSH-projects is built this way, how context is organised, assembled and collected, some early numbers and what is still unsolved are in a separate long piece: [Managing agents is managing context](https://hovocope135-tech.github.io/DSH-projects/site/blog/en/deep/).
-
-- [Product page](https://hovocope135-tech.github.io/DSH-projects/site/), [film](https://github.com/hovocope135-tech/DSH-projects/releases/latest/download/tacit-film.mp4)
-- [Getting started](docs/GETTING-STARTED.en.md); [features](docs/FEATURES.md) and [test report](docs/TESTING.md) (Chinese)
+- [Your next agent product may not need agents](https://hovocope135-tech.github.io/DSH-projects/site/blog/en/)
+- [Architecture: Managing agents is managing context](https://hovocope135-tech.github.io/DSH-projects/site/blog/en/deep/)
 
 ## Where it stands
 
