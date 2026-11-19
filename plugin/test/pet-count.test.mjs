@@ -100,3 +100,16 @@ test('「读了项目里的新消息」 opens to what was read (owner 2026-11-19
   ])
   assert.equal(client.inboxItems('收件箱没有未读条目。').length, 0)
 })
+
+test('DESIGN.md direction 2 (owner 2026-11-19): the three core tabs share one scope, white with hairline cards; the studio shows every option as a picture with one selected style', () => {
+  const source = readFileSync(new URL('../lib/client.js', import.meta.url), 'utf8')
+  for (const view of ['inbox', 'time', 'tree']) assert.match(source, new RegExp(`h\\(MiraOverview, \\{ view: "${view}" \\}\\), "mp4-core"`), view)
+  assert.doesNotMatch(source, /--mp4-canvas|mp4-tabpane-canvas/, 'no grey canvas')
+  assert.match(source, /:root\{--mp4-t-line:[^}]*--mp4-r-card:12px;--mp4-r-ctl:8px;--mp4-r-mark:4px\}/)
+  assert.match(source, /\.mp4-bd-proj,\.mp4-bd-card\{border:\.5px solid var\(--mp4-t-border\);border-radius:var\(--mp4-r-card\)\}/)
+  assert.match(source, /\.mp4-core \.mp4-tree-project\{border:\.5px solid var\(--mp4-t-border\)/)
+  assert.match(source, /\.mp4-core \.mp4-tl-list\{border:\.5px solid var\(--mp4-t-border\)/)
+  assert.match(source, /const opt = \(on, label, look, onClick, key, big\) => h\("button", \{ key, type: "button", className: "mp4-pick"/)
+  assert.match(source, /\.mp4-pick-on,\.mp4-pick-on:hover\{border-color:transparent;box-shadow:0 0 0 1\.5px var\(--mp4-fg\)\}/)
+  assert.doesNotMatch(source.slice(source.indexOf('function LookStudio('), source.indexOf('const titles = ["形象", "性格与呼出"];')), /mp4-chips" \}, Object\.keys\(LOOK_LABELS\.(shape|eyes|accessory)\)/, 'body, eyes and accessories are pictures, not text pills')
+})

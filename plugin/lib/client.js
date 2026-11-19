@@ -2233,7 +2233,8 @@ window.__ModuleLoader__.load({
 					h("span", { className: "mp4-tabs-end" },
 						h("button", { type: "button", className: "mp4-icon", "aria-label": wide ? "恢复宽度" : "加宽面板", onClick: onWide }, h(Icon, { name: "widen", size: 15 })),
 						h("button", { type: "button", className: "mp4-icon", "aria-label": "收起右侧面板", onClick: onHide }, h(Icon, { name: "panel", size: 15 })))),
-				h("div", { className: "mp4-panel-body" }, tabs.active === "start" || !tabs.tabs.includes(tabs.active)
+				// The three core views share DESIGN.md's components here too (the fallback page when her Session is not open).
+				h("div", { className: "mp4-panel-body" + (["inbox", "time", "tree"].includes(tabs.active) ? " mp4-core" : "") }, tabs.active === "start" || !tabs.tabs.includes(tabs.active)
 					? h("div", { className: "mp4-start" }, guides.map(g => h("button", { key: g.id, type: "button", className: "mp4-guide", onClick: () => tabs.open(g.id) },
 						h("span", { className: "mp4-guide-icon" }, h(Icon, { name: g.icon, size: 16 })), h("span", null, h("b", null, g.label)))))
 					: children));
@@ -3108,7 +3109,7 @@ window.__ModuleLoader__.load({
 				const canArchive = !t.experience?.execution?.active;
 				return h("div", { key: t.id, className: "mp4-tree-row mp4-tree-child" + (canArchive ? " mp4-tree-can-archive" : "") },
 					h("button", { type: "button", className: "mp4-row" + (quiet ? " mp4-muted" : ""), title: `${t.title}，${state}`, onClick: () => openTask(p.id, t) },
-						h(StatusIcon, { status: taskStatus(t) }), h("span", { className: "mp4-ell mp4-tree-title" }, t.title),
+						h(StatusIcon, { status: taskStatus(t), size: 16 }), h("span", { className: "mp4-ell mp4-tree-title" }, t.title),
 						label ? h("span", { className: "mp4-muted mp4-tree-meta" }, label) : null,
 						h("span", { className: "mp4-muted mp4-tree-meta mp4-tree-when" }, ago(t.updatedAt))),
 					canArchive ? h("button", { type: "button", className: "mp4-link-btn mp4-tree-archive", title: "从列表里收起。记录还在，项目的「已归档」里能找回", disabled: busy, onClick: () => archive(p, [t]) }, "归档") : null);
@@ -3119,9 +3120,9 @@ window.__ModuleLoader__.load({
 					h("div", { className: "mp4-tree-row" },
 						h("button", { type: "button", className: "mp4-tree-chev", "aria-label": `${isOpen ? "收起" : "展开"} ${p.name}`, "aria-expanded": isOpen, disabled: !total, style: total ? undefined : { visibility: "hidden" }, onClick: () => flip(setOpen, p.id, isOpen) }, h(Icon, { name: "chevron", size: 12 })),
 						h("button", { type: "button", className: "mp4-row", title: `打开项目「${p.name}」`, onClick: () => openProject(p.id) },
-							h("b", { className: "mp4-ell mp4-tree-title" }, p.name),
-							waiting ? h("span", { className: "mp4-count mp4-count-wait" }, `${waiting} 待处理`) : null,
-							running ? h("span", { className: "mp4-count" }, `${running} 进行中`) : null,
+							h(ProjectMark, { p, size: 16, plain: true }), h("b", { className: "mp4-ell mp4-tree-title" }, p.name),
+							waiting ? h("span", { className: "mp4-count" }, `${waiting} 件等你`) : null,
+							running ? h("span", { className: "mp4-count" }, `${running} 件在做`) : null,
 							waiting || running || !done.length ? null : h("span", { className: "mp4-muted mp4-tree-meta" }, `${done.length} 已完成`)),
 						h(MoreMenu, { items: [
 							done.length ? [`归档已完成的 ${done.length} 个任务`, () => archive(p, done)] : null,
@@ -3141,7 +3142,7 @@ window.__ModuleLoader__.load({
 						active.length || done.length ? null : h("p", { className: "mp4-muted mp4-tree-fold" }, "还没有任务")) : null);
 			};
 			return h("div", { className: "mp4-tree" },
-				h("p", { className: "mp4-muted mp4-tree-sum" }, rows.length ? [`${rows.length} 个项目`, count("waiting") ? `${count("waiting")} 项待处理` : null, count("running") ? `${count("running")} 项进行中` : null].filter(Boolean).join("，") : "还没有项目。"),
+				rows.length ? h("div", { className: "mp4-bd-head" }, h("b", null, "项目"), h("span", { className: "mp4-bd-count" }, [`${rows.length} 个项目`, count("waiting") ? `${count("waiting")} 件等你` : null].filter(Boolean).join("，"))) : h("p", { className: "mp4-muted" }, "还没有项目。"),
 				rows.map(project),
 				note && note.where === "list" ? h("p", { className: note.bad ? "mp4-tree-error" : "mp4-muted mp4-note" }, note.text) : null,
 				trash.length ? h("div", { className: "mp4-tree-trash" },
@@ -3667,9 +3668,9 @@ window.__ModuleLoader__.load({
 		}
 
 		const MIRA_TABS = [
-			{ id: "mira-projects.mira-inbox", kind: "mira-projects-mira-inbox", title: "待你决定", order: 3, desc: "跨项目的拍板、验收和失败", body: miraTab(() => h(MiraOverview, { view: "inbox" }), "mp4-tabpane-canvas") },
-			{ id: "mira-projects.mira-time", kind: "mira-projects-mira-time", title: "时间线", order: 4, desc: "今天按时间排的核心活动", body: miraTab(() => h(MiraOverview, { view: "time" })) },
-			{ id: "mira-projects.mira-tree", kind: "mira-projects-mira-tree", title: "项目与任务", order: 5, desc: "所有项目和它们的任务", body: miraTab(() => h(MiraOverview, { view: "tree" })) },
+			{ id: "mira-projects.mira-inbox", kind: "mira-projects-mira-inbox", title: "待你决定", order: 3, desc: "跨项目的拍板、验收和失败", body: miraTab(() => h(MiraOverview, { view: "inbox" }), "mp4-core") },
+			{ id: "mira-projects.mira-time", kind: "mira-projects-mira-time", title: "时间线", order: 4, desc: "今天按时间排的核心活动", body: miraTab(() => h(MiraOverview, { view: "time" }), "mp4-core") },
+			{ id: "mira-projects.mira-tree", kind: "mira-projects-mira-tree", title: "项目与任务", order: 5, desc: "所有项目和它们的任务", body: miraTab(() => h(MiraOverview, { view: "tree" }), "mp4-core") },
 			{ id: "mira-projects.mira-memory", kind: "mira-projects-mira-memory", title: "记忆", order: 6, desc: "个人助理记着的：关于你、工作", quiet: true, body: miraTab(() => h(MiraMemory)) },
 			{ id: "mira-projects.mira-agents", kind: "mira-projects-mira-agents", title: "助理与模型", order: 12, desc: "每个助理什么时候醒、读到什么、用什么模型", quiet: true, body: miraTab(snap => h(AgentModels, { revision: snap.rev })) },
 			{ id: "mira-projects.mira-more", kind: "mira-projects-mira-more", title: "助理设置", order: 13, desc: "活动与设备、邮件与飞书、资料保留、今日看板；记忆和模型收在「高级」里", body: miraTab(snap => h(MiraMore, { snap })) },
@@ -4537,21 +4538,19 @@ window.__ModuleLoader__.load({
 				try { await act("assistantLook", { look }); onClose(); }
 				catch (e) { setError(e.message); setBusy(null); }
 			};
+			// Every option shows what it looks like; its name is the tooltip. One selected style for all of them (DESIGN.md).
+			const opt = (on, label, look, onClick, key, big) => h("button", { key, type: "button", className: "mp4-pick" + (big ? " mp4-pick-big" : "") + (on ? " mp4-pick-on" : ""), "aria-pressed": on, "aria-label": label, title: label, onClick }, h(MiraPortrait, { size: big ? 44 : 32, look }));
+			const group = (label, body) => h("div", { className: "mp4-studio-grp" }, h("p", { className: "mp4-studio-q" }, label), body);
 			const chip = (on, label, onClick, key) => h("button", { key: key || label, type: "button", className: "mp4-chip" + (on ? " mp4-chip-on" : ""), "aria-pressed": on, onClick }, label);
 			const steps = [
 				h("div", { key: 0, className: "mp4-studio-body" },
-					h("p", { className: "mp4-studio-q" }, "从一个样子开始"),
-					h("div", { className: "mp4-tpls" }, LOOK_TEMPLATES.map(t => h("button", { key: t.id, type: "button", className: "mp4-tpl" + (isTemplate(draft, t) ? " mp4-tpl-on" : ""), "aria-pressed": isTemplate(draft, t), title: t.name,
-						onClick: () => setLook({ template: t.id, color: t.color, shape: t.shape, eyes: t.eyes, accessory: t.accessory, name: draft.name === (LOOK_TEMPLATES.find(x => isTemplate(draft, x))?.name ?? "") ? t.name : draft.name }) },
-						h(MiraPortrait, { size: 40, look: { ...t } }), h("span", null, t.name)))),
-					h("p", { className: "mp4-studio-q" }, "颜色"),
-					h("div", { className: "mp4-swatches", role: "radiogroup", "aria-label": "颜色" }, Object.keys(LOOK_FILLS).map(c => h("button", { key: c, type: "button", role: "radio", "aria-checked": draft.color === c, "aria-label": LOOK_LABELS.color[c], title: LOOK_LABELS.color[c],
-						className: "mp4-swatch" + (draft.color === c ? " mp4-swatch-on" : ""), style: { background: LOOK_FILLS[c], color: LOOK_FILLS[c] }, onClick: () => setLook({ color: c }) }))),
-					h("div", { className: "mp4-studio-row" }, h("span", { className: "mp4-k" }, "身体"), h("div", { className: "mp4-chips" }, Object.keys(LOOK_LABELS.shape).map(k => chip(draft.shape === k, LOOK_LABELS.shape[k], () => setLook({ shape: k }), "s" + k)))),
-					h("div", { className: "mp4-studio-row" }, h("span", { className: "mp4-k" }, "眼睛"), h("div", { className: "mp4-chips" }, Object.keys(LOOK_LABELS.eyes).map(k => chip(draft.eyes === k, LOOK_LABELS.eyes[k], () => setLook({ eyes: k }), "e" + k)))),
-					h("div", { className: "mp4-studio-row" }, h("span", { className: "mp4-k" }, "配饰"), h("div", { className: "mp4-chips" }, Object.keys(LOOK_LABELS.accessory).map(k => chip(draft.accessory === k, LOOK_LABELS.accessory[k], () => setLook({ accessory: k }), "a" + k)))),
-					h("label", { className: "mp4-studio-row" }, h("span", { className: "mp4-k" }, "名字"),
-						h("input", { className: "mp4-studio-input", value: draft.name, maxLength: 12, onChange: e => setDraft(d => ({ ...d, name: e.target.value })), "aria-label": "助理的名字" }))),
+					group("样子", h("div", { className: "mp4-picks" }, LOOK_TEMPLATES.map(t => opt(isTemplate(draft, t), t.name, { ...t, template: null }, () => setLook({ template: t.id, color: t.color, shape: t.shape, eyes: t.eyes, accessory: t.accessory, name: draft.name === (LOOK_TEMPLATES.find(x => isTemplate(draft, x))?.name ?? "") ? t.name : draft.name }), t.id, true)))),
+					group("颜色", h("div", { className: "mp4-swatches", role: "radiogroup", "aria-label": "颜色" }, Object.keys(LOOK_FILLS).map(c => h("button", { key: c, type: "button", role: "radio", "aria-checked": draft.color === c, "aria-label": LOOK_LABELS.color[c], title: LOOK_LABELS.color[c],
+						className: "mp4-swatch" + (draft.color === c ? " mp4-swatch-on" : ""), style: { background: LOOK_FILLS[c], color: LOOK_FILLS[c] }, onClick: () => setLook({ color: c }) })))),
+					h("div", { className: "mp4-studio-pair" },
+						group("身体", h("div", { className: "mp4-picks" }, Object.keys(LOOK_LABELS.shape).map(k => opt(draft.shape === k, LOOK_LABELS.shape[k], { ...draft, template: null, shape: k, accessory: "none" }, () => setLook({ shape: k }), "s" + k)))),
+						group("眼睛", h("div", { className: "mp4-picks" }, Object.keys(LOOK_LABELS.eyes).map(k => opt(draft.eyes === k, LOOK_LABELS.eyes[k], { ...draft, template: null, eyes: k, accessory: "none" }, () => setLook({ eyes: k }), "e" + k))))),
+					group("配饰", h("div", { className: "mp4-picks" }, Object.keys(LOOK_LABELS.accessory).map(k => opt(draft.accessory === k, LOOK_LABELS.accessory[k], { ...draft, template: null, accessory: k }, () => setLook({ accessory: k }), "a" + k))))),
 				h("div", { key: 1, className: "mp4-studio-body" },
 					h("p", { className: "mp4-studio-q" }, "它是什么性格？最多选 3 个"),
 					h("div", { className: "mp4-chips" }, LOOK_TRAIT_LIST.map(t => chip(draft.traits.includes(t), t, () => toggleTrait(t)))),
@@ -4569,12 +4568,12 @@ window.__ModuleLoader__.load({
 				h("div", { className: "mp4-studio", role: "dialog", "aria-modal": true, "aria-label": "捏一个你的助理" },
 					h("div", { className: "mp4-studio-head" },
 						h("b", null, first ? "捏一个你的助理" : "形象与快捷键"),
-						h("div", { className: "mp4-studio-steps" }, titles.map((t, i) => h("button", { key: t, type: "button", className: "mp4-studio-step" + (i === step ? " mp4-studio-step-on" : ""), onClick: () => setStep(i) }, `${i + 1} ${t}`))),
+						h("div", { className: "mp4-studio-steps" }, titles.map((t, i) => h("button", { key: t, type: "button", className: "mp4-studio-step" + (i === step ? " mp4-studio-step-on" : ""), onClick: () => setStep(i) }, t))),
 						h("button", { type: "button", className: "mp4-dock-x", "aria-label": "关闭", onClick: onClose, disabled: !!busy }, h(Icon, { name: "close", size: 14 }))),
 					h("div", { className: "mp4-studio-main" },
 						h("div", { className: "mp4-studio-stage" },
 							h(MiraPortrait, { look: draft, size: 112 }),
-							h("b", null, draft.name || "未命名"),
+							h("input", { className: "mp4-studio-name", value: draft.name, maxLength: 12, placeholder: "名字", onChange: e => setDraft(d => ({ ...d, name: e.target.value })), "aria-label": "助理的名字" }),
 							draft.traits.length ? h("span", { className: "mp4-muted" }, draft.traits.join("、")) : null),
 						steps[step]),
 					error ? h("p", { className: "mp-error", role: "alert" }, error) : null,
@@ -5370,24 +5369,64 @@ button.mp4-dock-note-text{all:unset;box-sizing:border-box;cursor:pointer;min-wid
 .mp4-head-avatar{display:inline-flex;align-items:center;margin-right:8px}.mp4-portrait{display:block;flex:none}
 /* A task link opens the task here, not a web page: no globe in front of it. */
 a[href^="https://task.local/"]>svg:first-child{display:none}
-.mp4-bd,.mp4-tabpane-canvas,.mp4-panel-body:has(>.mp4-bd){--mp4-canvas:color-mix(in srgb,var(--rx-gray-2) 50%,var(--rx-gray-3));--mp4-card:var(--mp4-bg)}.mp4-tabpane-canvas,.mp4-panel-body:has(>.mp4-bd){background:var(--mp4-canvas)}
-@media (prefers-color-scheme:dark){html:not([data-theme="light"]) :is(.mp4-bd,.mp4-tabpane-canvas,.mp4-panel-body:has(>.mp4-bd)){--mp4-canvas:var(--rx-gray-1);--mp4-card:var(--rx-gray-3)}}html[data-theme="dark"] :is(.mp4-bd,.mp4-tabpane-canvas,.mp4-panel-body:has(>.mp4-bd)),html.dark :is(.mp4-bd,.mp4-tabpane-canvas,.mp4-panel-body:has(>.mp4-bd)){--mp4-canvas:var(--rx-gray-1);--mp4-card:var(--rx-gray-3)}
-.mp4-bd{display:flex;flex-direction:column;gap:24px;padding:4px 0 24px;color:var(--mp4-fg);background:var(--mp4-canvas)}
+/* DESIGN.md: one set of tokens and components for 待你决定, 时间线 and 项目与任务 (direction 2: white, hairline cards). Lines and hover are mixed from the text colour, so dark mode follows by itself. */
+:root{--mp4-t-line:color-mix(in srgb,var(--rx-gray-12) 8%,transparent);--mp4-t-border:color-mix(in srgb,var(--rx-gray-12) 14%,transparent);--mp4-t-hover:color-mix(in srgb,var(--rx-gray-12) 4%,transparent);--mp4-r-card:12px;--mp4-r-ctl:8px;--mp4-r-mark:4px}
+.mp4-bd{display:flex;flex-direction:column;gap:24px;padding:4px 0 24px;color:var(--mp4-fg)}
 .mp4-bd-sec{display:flex;flex-direction:column;gap:12px}
-.mp4-bd-head{display:flex;align-items:center;gap:8px;padding:0 4px}.mp4-bd-head>b{font-size:16px;line-height:24px;font-weight:600}.mp4-bd-count{margin-left:auto;font-size:14px;line-height:22px;color:var(--mp4-fg2)}.mp4-bd-head .mp4-kb-tool{margin-left:4px}
-.mp4-bd-proj,.mp4-bd-card{background:var(--mp4-card);border-radius:12px}.mp4-bd-proj{padding:16px}.mp4-bd-card{padding:4px}
-.mp4-bd-proj-h{all:unset;box-sizing:border-box;cursor:pointer;display:flex;align-items:center;gap:8px;width:100%;margin-bottom:6px}.mp4-bd-proj-h>b{flex:1;min-width:0;font-size:14px;line-height:22px;font-weight:600}.mp4-bd-proj-h time,.mp4-bd-row time,.mp4-bd-msg time{flex:none;font-size:14px;line-height:22px;color:var(--mp4-fg2)}.mp4-bd-proj-h:hover>b{text-decoration:underline;text-underline-offset:3px;text-decoration-thickness:.5px}
-.mp4-bd-story{margin:0 0 0 24px;font-size:14px;line-height:22px;color:var(--mp4-fg)}
-.mp4-bd-rows{display:flex;flex-direction:column;margin:10px -12px -12px}
-.mp4-bd-row{all:unset;box-sizing:border-box;cursor:pointer;display:flex;align-items:center;gap:8px;width:100%;padding:8px 12px;border-radius:8px;font-size:14px;line-height:22px;transition:background 250ms ease-out}.mp4-bd-row:hover,.mp4-bd-msg:hover,.mp4-bd-more:hover{background:var(--mp4-hover)}
+.mp4-bd-head{display:flex;align-items:center;gap:8px;padding:0 4px}.mp4-bd-head>b{font-size:16px;line-height:24px;font-weight:600}.mp4-bd-count{margin-left:auto;font-size:14px;line-height:24px;color:var(--mp4-fg2)}.mp4-bd-head .mp4-kb-tool{margin-left:4px}
+.mp4-bd-proj,.mp4-bd-card{border:.5px solid var(--mp4-t-border);border-radius:var(--mp4-r-card)}.mp4-bd-proj{padding:16px 16px 4px}.mp4-bd-card{padding:4px}
+.mp4-bd-proj-h{all:unset;box-sizing:border-box;cursor:pointer;display:flex;align-items:center;gap:8px;width:100%;margin-bottom:4px}.mp4-bd-proj-h>b{flex:1;min-width:0;font-size:14px;line-height:24px;font-weight:600}.mp4-bd-proj-h time,.mp4-bd-row time,.mp4-bd-msg time{flex:none;font-size:14px;line-height:24px;color:var(--mp4-fg2)}.mp4-bd-proj-h:hover>b{text-decoration:underline;text-underline-offset:3px;text-decoration-thickness:.5px}
+.mp4-bd-story{margin:0 0 12px 24px;font-size:14px;line-height:24px;color:var(--mp4-fg)}
+.mp4-bd-rows{display:flex;flex-direction:column;margin:0 -12px;padding:4px 0;border-top:.5px solid var(--mp4-t-line)}
+.mp4-bd-row{all:unset;box-sizing:border-box;cursor:pointer;display:flex;align-items:center;gap:8px;width:100%;min-height:40px;padding:0 12px;border-radius:var(--mp4-r-ctl);font-size:14px;line-height:24px;transition:background 250ms ease-out}.mp4-bd-row:hover,.mp4-bd-msg:hover,.mp4-bd-more:hover{background:var(--mp4-t-hover)}
 .mp4-bd-verb{flex:none;color:var(--mp4-fg2)}.mp4-bd-line{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.mp4-bd-more{all:unset;box-sizing:border-box;cursor:pointer;display:block;width:100%;padding:8px 12px 8px 36px;border-radius:8px;font-size:14px;line-height:22px;color:var(--mp4-fg2);transition:background 250ms ease-out}.mp4-bd-more:hover{color:var(--mp4-fg)}
-.mp4-bd-msg{position:relative;display:flex;align-items:flex-start;gap:8px;padding:12px;border-radius:8px;cursor:pointer;transition:background 250ms ease-out}
-.mp4-bd-msg-ic{flex:none;width:16px;height:22px;display:grid;place-items:center}
-.mp4-kanban-rows{margin:8px 4px 0;padding-top:12px;border-top:.5px solid var(--mp4-hair2)}.mp4-kanban-row{display:flex;align-items:baseline;gap:8px;padding:4px 0;font-size:14px;line-height:22px}.mp4-kanban-lane{flex:none;color:var(--mp4-fg2)}.mp4-kanban-item{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.mp4-kanban-row-acts{flex:none;margin-left:auto;display:flex;gap:12px}.mp4-kanban-row .mp4-link-btn{padding:0;font-size:14px;line-height:22px}
-.mp4-bd-msg-b{flex:1;min-width:0;display:flex;flex-direction:column}.mp4-bd-msg-b>b{font-size:14px;line-height:22px;font-weight:500}.mp4-bd-msg-b>span{font-size:14px;line-height:22px;color:var(--mp4-fg2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.mp4-bd-more{all:unset;box-sizing:border-box;cursor:pointer;display:block;width:100%;min-height:40px;padding:8px 12px 8px 36px;border-radius:var(--mp4-r-ctl);font-size:14px;line-height:24px;color:var(--mp4-fg2);transition:background 250ms ease-out}.mp4-bd-more:hover{color:var(--mp4-fg)}
+.mp4-bd-msg{position:relative;display:flex;align-items:flex-start;gap:8px;padding:12px;border-radius:var(--mp4-r-ctl);cursor:pointer;transition:background 250ms ease-out}
+.mp4-bd-msg+.mp4-bd-msg::before,.mp4-bd-card>.mp4-bd-more::before{content:"";position:absolute;left:12px;right:12px;top:0;border-top:.5px solid var(--mp4-t-line)}.mp4-bd-card>.mp4-bd-more{position:relative}
+.mp4-bd-msg-ic{flex:none;width:16px;height:24px;display:grid;place-items:center}
+.mp4-kanban-rows{margin:8px 4px 0;padding-top:12px;border-top:.5px solid var(--mp4-hair2)}.mp4-kanban-row{display:flex;align-items:baseline;gap:8px;padding:4px 0;font-size:14px;line-height:24px}.mp4-kanban-lane{flex:none;color:var(--mp4-fg2)}.mp4-kanban-item{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.mp4-kanban-row-acts{flex:none;margin-left:auto;display:flex;gap:12px}.mp4-kanban-row .mp4-link-btn{padding:0;font-size:14px;line-height:24px}
+.mp4-bd-msg-b{flex:1;min-width:0;display:flex;flex-direction:column}.mp4-bd-msg-b>b{font-size:14px;line-height:24px;font-weight:500}.mp4-bd-msg-b>span{font-size:14px;line-height:24px;color:var(--mp4-fg2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .mp4-bd-msg:hover>time{visibility:hidden}.mp4-bd-msg>.mp4-kb-x{opacity:0}.mp4-bd-msg:hover>.mp4-kb-x,.mp4-bd-msg>.mp4-kb-x:focus-visible{opacity:1}
-.mp4-bd-msg>.mp4-kb-x{top:12px;right:12px;background:var(--mp4-card)}
+.mp4-bd-msg>.mp4-kb-x{top:12px;right:12px;background:var(--mp4-bg)}
+.mp4-tabpane.mp4-core{padding:16px 16px 24px;gap:16px;font-size:14px;line-height:24px;background:var(--mp4-bg)}.mp4-panel-body.mp4-core{gap:16px;font-size:14px;line-height:24px}
+.mp4-core .mp4-sec{gap:0}.mp4-core .mp4-sec>.mp4-k{margin:0 0 12px;padding:0 4px;font-size:16px;line-height:24px;font-weight:600;color:var(--mp4-fg)}
+.mp4-core .mp4-judge{font-size:14px;line-height:24px;padding:0 4px}
+.mp4-core .mp4-tl-top{gap:12px;margin:0}.mp4-core .mp4-tl-top .mp4-live{padding:8px 12px;border-radius:var(--mp4-r-ctl);background:none;border:.5px solid var(--mp4-t-border);font-size:14px;line-height:24px}.mp4-core .mp4-live-recent{margin:-4px 0 0 12px;font-size:14px;line-height:24px;color:var(--mp4-fg2)}
+.mp4-core .mp4-sugs{gap:8px}.mp4-core .mp4-sug{font-size:14px;line-height:24px;padding:4px 12px;border-radius:var(--mp4-r-ctl);border-color:var(--mp4-t-border)}.mp4-core .mp4-sug:hover{background:var(--mp4-t-hover)}
+.mp4-core .mp4-tl-list{border:.5px solid var(--mp4-t-border);border-radius:var(--mp4-r-card);padding:4px 16px 4px 8px}
+.mp4-core .mp4-tl{grid-template-columns:48px 1px minmax(0,1fr);column-gap:12px}
+.mp4-core .mp4-tl-time,.mp4-core .mp4-tl-until{font-size:14px;line-height:24px;font-weight:400;color:var(--mp4-fg2)}
+.mp4-core .mp4-tl-title{font-size:14px;line-height:24px;font-weight:500}.mp4-core .mp4-tl-desc{font-size:14px;line-height:24px;color:var(--mp4-fg2)}
+.mp4-core .mp4-tl-chips{gap:12px;margin-top:4px}.mp4-core .mp4-tl-chip,.mp4-core .mp4-tl-act{font-size:14px;line-height:24px;border-radius:var(--mp4-r-mark)}.mp4-core .mp4-tl-act{padding:0 8px}
+.mp4-core .mp4-tree{gap:12px}
+.mp4-core .mp4-tree-project{border:.5px solid var(--mp4-t-border);border-radius:var(--mp4-r-card);padding:4px}
+.mp4-core .mp4-tree-project>.mp4-tree-row:first-child:has(~ .mp4-tree-child){margin-bottom:4px;box-shadow:0 .5px 0 var(--mp4-t-line)}
+.mp4-core .mp4-tree-row{min-height:40px;position:relative}.mp4-core .mp4-tree-row>.mp4-more{position:absolute;right:8px;top:50%;transform:translateY(-50%);background:var(--mp4-bg);border-radius:var(--mp4-r-ctl)}.mp4-core .mp4-tree-row:hover .mp4-count,.mp4-core .mp4-tree-row:focus-within .mp4-count{visibility:hidden}.mp4-core .mp4-tree-row .mp4-row{min-height:40px;padding:0 8px;gap:8px;align-items:center;border-radius:var(--mp4-r-ctl);font-size:14px;line-height:24px}.mp4-core .mp4-tree-row .mp4-row:hover{background:var(--mp4-t-hover)}
+.mp4-core .mp4-tree-chev{width:20px;height:24px}.mp4-core .mp4-tree-title{font-weight:400}.mp4-core .mp4-tree-project>.mp4-tree-row:first-child .mp4-tree-title{font-weight:600}
+.mp4-core .mp4-count,.mp4-core .mp4-tree-meta,.mp4-core .mp4-tree-fold,.mp4-core .mp4-tree-archive,.mp4-core .mp4-tree-error,.mp4-core .mp4-tree-trash .mp4-link-btn{font-size:14px;line-height:24px;font-weight:400}.mp4-core .mp4-count,.mp4-core .mp4-tree-meta,.mp4-core .mp4-tree-fold{color:var(--mp4-fg2)}
+.mp4-core .mp4-tree-child{padding-left:20px}.mp4-core .mp4-tree-fold{margin:0 0 0 52px;padding:8px 0}
+.mp4-core .mp4-tree-confirm{margin:4px 8px 8px 28px;padding:12px;border-radius:var(--mp4-r-ctl);background:none;border:.5px solid var(--mp4-t-border);font-size:14px;line-height:24px}
+.mp4-core .mp4-tree-trash{margin-top:0;padding:4px 8px;border:.5px solid var(--mp4-t-border);border-radius:var(--mp4-r-card)}.mp4-core .mp4-tree-trash>.mp4-link-btn{min-height:40px;display:flex;align-items:center;padding:0 4px;color:var(--mp4-fg2)}.mp4-core .mp4-tree-gone{gap:8px;min-height:40px;padding:0 4px 0 28px}
+/* DESIGN.md: the studio uses the same tokens (radius 12/8/4, one selected style, 16/14 type) */
+.mp4-studio{width:min(800px,100%);gap:16px;padding:20px 24px;border-radius:var(--mp4-r-card);box-shadow:0 0 0 .5px var(--mp4-t-border),0 24px 64px rgba(0,0,0,.18);font-size:14px;line-height:24px}
+.mp4-studio-head>b{font-size:16px;line-height:24px;font-weight:600}.mp4-studio-steps{justify-content:flex-end}
+.mp4-studio-step{padding:0 8px;border-radius:var(--mp4-r-ctl);font-size:14px;line-height:24px;color:var(--mp4-fg2)}.mp4-studio-step-on{background:var(--mp4-t-hover);color:var(--mp4-fg)}
+.mp4-studio-main{gap:24px;flex-wrap:nowrap}
+.mp4-studio-stage{width:208px;padding:24px 12px 12px;gap:12px;border-radius:var(--mp4-r-card);background:none;border:.5px solid var(--mp4-t-border)}
+.mp4-studio-name{width:100%;box-sizing:border-box;font:inherit;font-size:14px;line-height:24px;text-align:center;padding:4px 8px;border-radius:var(--mp4-r-ctl);border:.5px solid var(--mp4-t-border);background:var(--mp4-bg);color:var(--mp4-fg)}.mp4-studio-name:focus{outline:none;border-color:var(--mp4-fg2)}
+.mp4-studio-stage>span{font-size:14px;line-height:24px;color:var(--mp4-fg2)}
+.mp4-studio-body{gap:16px}.mp4-studio-grp{display:flex;flex-direction:column;gap:8px}.mp4-studio-pair{display:flex;gap:24px;flex-wrap:wrap}
+.mp4-studio-q{font-size:14px;line-height:24px;color:var(--mp4-fg2)}
+.mp4-picks{display:flex;flex-wrap:wrap;gap:8px}
+.mp4-pick{all:unset;box-sizing:border-box;cursor:pointer;width:48px;height:48px;display:grid;place-items:center;border-radius:var(--mp4-r-ctl);border:.5px solid var(--mp4-t-border);transition:background 250ms ease-out}.mp4-pick:hover{background:var(--mp4-t-hover)}.mp4-pick-big{width:64px;height:64px}
+.mp4-pick-on,.mp4-pick-on:hover{border-color:transparent;box-shadow:0 0 0 1.5px var(--mp4-fg)}.mp4-pick:focus-visible{outline:2px solid var(--rx-blue-9);outline-offset:2px}
+.mp4-studio .mp4-swatches{gap:12px;padding:4px}.mp4-studio .mp4-swatch{width:24px;height:24px}.mp4-studio .mp4-swatch-on{box-shadow:0 0 0 2px var(--mp4-bg),0 0 0 3.5px var(--mp4-fg)}
+.mp4-studio .mp4-chip{padding:4px 12px;border-radius:var(--mp4-r-ctl);border:.5px solid var(--mp4-t-border);font-size:14px;line-height:24px}.mp4-studio .mp4-chip-on{background:none;border-color:transparent;box-shadow:0 0 0 1.5px var(--mp4-fg);color:var(--mp4-fg)}
+.mp4-studio .mp4-studio-gen input{font-size:14px;line-height:24px;padding:4px 12px;border-radius:var(--mp4-r-ctl);border-color:var(--mp4-t-border)}
+.mp4-studio .mp4-key{padding:4px 12px;border-radius:var(--mp4-r-ctl);font-size:14px;line-height:24px}.mp4-studio .mp4-studio-row{grid-template-columns:48px minmax(0,1fr)}
+.mp4-studio .mp4-sug{font-size:14px;line-height:24px;padding:4px 16px;border-radius:var(--mp4-r-ctl)}.mp4-studio .mp4-sug:not(.mp4-sug-strong){border-color:transparent;color:var(--mp4-fg2)}
+.mp4-studio .mp4-mem-link{font-size:14px;line-height:24px;color:var(--mp4-fg2)}
+@media (max-width:640px){.mp4-studio-main{flex-wrap:wrap}.mp4-studio-stage{width:100%}}
 .mp4-buddy{display:block;flex:none}.mp4-buddy-blink .mp4-buddy-eyes{transform-box:fill-box;transform-origin:center;animation:mp4-buddy-blink 4.2s steps(1) infinite}
 @keyframes mp4-buddy-blink{0%,93%,100%{transform:scaleY(1)}95%{transform:scaleY(.1)}}
 .mp4-buddy-glance .mp4-buddy-eyes{animation:mp4-buddy-glance 2.4s steps(1) infinite}
