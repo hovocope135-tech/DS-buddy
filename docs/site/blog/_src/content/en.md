@@ -1,5 +1,5 @@
 ^ Notes on building AI products
-# Your next agent product may not need agents
+# Your next agent product doesn't need you to worry about agents
 > Exploring the best way for people and AI to work together
 
 ![DSH-projects: the personal assistant Tacit on the left, the Waiting on you board on the right](img/rd2-hero.jpg)
@@ -80,7 +80,7 @@ The biggest problem today is whether the coordinator, the assistant that splits 
 
 Come and try it.
 
-DSH-projects: your next agent product may not need agents.
+DSH-projects: your next agent product doesn't need you to worry about agents.
 
 Further reading:
 

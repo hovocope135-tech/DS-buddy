@@ -1,6 +1,6 @@
 # DSH-projects
 
-**Your next agent product may not need agents. Exploring the best way for people and AI to work together.**
+**Your next agent product doesn't need you to worry about agents. Exploring the best way for people and AI to work together.**
 
 [中文](README.md)
 
@@ -24,7 +24,7 @@ This is the core philosophy DSH-projects is built on, and its main difference fr
 
 Left: a common multi-agent product, where context, Skills and runtime are bound into each agent. Right: DSH-projects, where one personal assistant serves many projects, each project is split into tasks along context boundaries, and the runtime is decoupled from the context and can be swapped per task. The numbers refer to the sections of the [architecture article](https://hovocope135-tech.github.io/DSH-projects/site/blog/en/deep/). The figure's labels are in Chinese.
 
-If you want to try the next generation of AI too: your next agent product may not need agents.
+If you want to try the next generation of AI too: your next agent product doesn't need you to worry about agents.
 
 **Install DSH-projects and try it.**
 
@@ -121,7 +121,7 @@ It doesn't send messages in your name. Without a word from you it makes no decis
 
 ## More thinking
 
-- [Your next agent product may not need agents](https://hovocope135-tech.github.io/DSH-projects/site/blog/en/)
+- [Your next agent product doesn't need you to worry about agents](https://hovocope135-tech.github.io/DSH-projects/site/blog/en/)
 - [Architecture: Managing agents is managing context](https://hovocope135-tech.github.io/DSH-projects/site/blog/en/deep/)
 
 ## Where it stands

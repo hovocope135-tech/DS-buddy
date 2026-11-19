@@ -1,6 +1,6 @@
 ^ Notes on building AI products
 # Managing agents is managing context
-> Your next agent product may not need agents. This piece is about why DSH-projects is built the way it is: how context is organised, assembled and collected, some early numbers, and what is still unsolved.
+> Your next agent product doesn't need you to worry about agents. This piece is about why DSH-projects is built the way it is: how context is organised, assembled and collected, some early numbers, and what is still unsolved.
 
 ## 1. From agents to context
 
@@ -165,7 +165,7 @@ Both kinds of session have dropped over the last three days, and the cause hasn'
 
 ## 8. Closing
 
-Looking back, what DSH-projects does fits in one sentence: stop treating agents as the thing to manage, organise context per task, and have people appear only to make the call and accept the result. Work still runs in parallel, at the task level. Executors can be swapped, models can be swapped, and what stays is the context of each job. So the next agent product may not need agents.
+Looking back, what DSH-projects does fits in one sentence: stop treating agents as the thing to manage, organise context per task, and have people appear only to make the call and accept the result. Work still runs in parallel, at the task level. Executors can be swapped, models can be swapped, and what stays is the context of each job. So the next agent product doesn't need you to worry about agents.
 
 The assistant that is always there is called Tacit by default, after tacit knowledge: what can't quite be put into words and keeps working anyway. I want it to know the background of a job before the user opens their mouth.
 

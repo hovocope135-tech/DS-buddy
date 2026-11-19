@@ -4,11 +4,11 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>管理 agent，就是管理 context | DSH-projects</title>
-<meta name="description" content="你的下一个 Agent 产品，不一定需要有 Agent。这一篇写 DSH-projects 为什么这样设计：上下文怎么组织、拼装和采集，初步数据，和还没解决的问题。">
+<meta name="description" content="你的下一个 Agent 产品，不需要你操心 Agent。这一篇写 DSH-projects 为什么这样设计：上下文怎么组织、拼装和采集，初步数据，和还没解决的问题。">
 <meta property="og:type" content="article">
 <meta property="og:site_name" content="DSH-projects">
 <meta property="og:title" content="管理 agent，就是管理 context">
-<meta property="og:description" content="你的下一个 Agent 产品，不一定需要有 Agent。这一篇写 DSH-projects 为什么这样设计：上下文怎么组织、拼装和采集，初步数据，和还没解决的问题。">
+<meta property="og:description" content="你的下一个 Agent 产品，不需要你操心 Agent。这一篇写 DSH-projects 为什么这样设计：上下文怎么组织、拼装和采集，初步数据，和还没解决的问题。">
 <meta property="og:url" content="https://hovocope135-tech.github.io/DSH-projects/site/blog/deep/">
 <meta property="og:image" content="https://hovocope135-tech.github.io/DSH-projects/site/blog/img/rd2-hero.jpg">
 <meta name="twitter:card" content="summary_large_image">
@@ -36,7 +36,7 @@
       <p class="kick">我的 AI 产品实践</p>
       <h1>管理 agent，就是管理 context</h1>
       <p class="meta">DSH-projects <i>·</i> 2026/11/16</p>
-      <p class="dek">你的下一个 Agent 产品，不一定需要有 Agent。这一篇写 DSH-projects 为什么这样设计：上下文怎么组织、拼装和采集，初步数据，和还没解决的问题。</p>
+      <p class="dek">你的下一个 Agent 产品，不需要你操心 Agent。这一篇写 DSH-projects 为什么这样设计：上下文怎么组织、拼装和采集，初步数据，和还没解决的问题。</p>
     </header>
 <h2 id="s1">1. 从 agent 到 context</h2>
 <p>过去一年，单任务的 agent 已经证明，模型可以用工具把一件复杂的事做完，越来越少需要人盯着每一步。多个 agent 同时干活也变得可行。人的位置随之上移，从执行移到决策和验收。</p>
@@ -107,7 +107,7 @@
 <h2 id="s7">7. 开放问题</h2>
 <ul><li><strong>项目由谁来建</strong>：任务由 AI 拆，项目只在用户开口时才建。AI 是否应当主动提出新项目、提到什么程度，还没有定论。</li><li><strong>时间线的准确性</strong>：相邻几窗容易被前一窗带偏，写成同一件事。原始记录保留着，但需要人来发现。</li><li><strong>执行者的切换</strong>：切换只在一轮结束后生效，运行中途如何交接还没有好方案。Claude Code 和 Codex 作为执行者时没有权限确认，也没有沙箱；Codex 还没有验证到跑完一个完整任务。</li><li><strong>拼装与缓存</strong>：缓存读取比例最近在下降，每次开工时上下文怎样拼最合适，需要更多数据。</li><li><strong>污染与注入</strong>：采集的上下文越多，越要防污染和提示词注入。信任标记是第一步，是否足够要看真实使用。</li><li><strong>反馈</strong>：反馈目前主要靠人，哪些环节可以交给自动检查，还在尝试。</li></ul>
 <h2 id="s8">8. 结语</h2>
-<p>回头看，DSH-projects 做的事可以收成一句话：不把 agent 当成要管理的对象，把上下文按任务组织起来，让人只在拍板和验收时出现。并行还在，发生在任务这一层；执行者可以换，模型可以换，留下来的是每件事的上下文。所以下一个 agent 产品，不一定需要有 agent。</p>
+<p>回头看，DSH-projects 做的事可以收成一句话：不把 agent 当成要管理的对象，把上下文按任务组织起来，让人只在拍板和验收时出现。并行还在，发生在任务这一层；执行者可以换，模型可以换，留下来的是每件事的上下文。所以下一个 agent 产品，不需要你操心 agent。</p>
 <p>里面那个一直在的助理默认叫 Tacit，取 tacit knowledge（默会知识）的意思：说不清，却一直在起作用。我希望它在用户开口之前，就已经了解和这件事有关的上下文。</p>
 <p>DSH-projects 是 DeepSeek Harness 的一个开源插件，代码在 <a href="https://github.com/hovocope135-tech/DSH-projects">GitHub</a>，MIT 许可。</p>
   </article>

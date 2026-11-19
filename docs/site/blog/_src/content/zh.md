@@ -1,5 +1,5 @@
 ^ 我的 AI 产品实践
-# 你的下一个 Agent 产品，不一定需要有 Agent
+# 你的下一个 Agent 产品，不需要你操心 Agent
 > 探索人与 AI 的最佳协作方式
 
 ![DSH-projects：左边是个人助理 Tacit，右边是「待你决定」看板](img/rd2-hero.jpg)
@@ -80,7 +80,7 @@ DSH-projects 里核心的助理，名字默认叫 Tacit，内涵是默会，心�
 
 欢迎体验。
 
-DSH-projects，你的下一个 Agent 产品，不一定需要有 Agent。
+DSH-projects，你的下一个 Agent 产品，不需要你操心 Agent。
 
 更多阅读：
 
