@@ -12,8 +12,9 @@ This is the core philosophy DSH-projects is built on, and its main difference fr
 
 **1. Organise context around the nature of the task itself. Managing multiple agents is a false problem; the only thing that needs managing is context.**
 
-- Only when a task by its nature needs splitting do we need multiple agents with different context. Otherwise multiple agents are a shallow imitation of a human meeting room. What really improves how well a task gets done is not shallow adversarial review, it is keeping the task's Goal document in good shape from the start.
-- Multiple agents still have value, but we don't need the concept of an agent. In DSH-projects you can still open several sessions in parallel at the task level, but we don't put the agent concept forward. We think the only difference a user needs to perceive is the model.
+- At bottom, multiple agents are context isolation. Splitting work across several agents in parallel is only worth it when the task can be decomposed and its subtasks have no sequential dependencies; otherwise coordination overhead and error amplification eat the gain, and what is left is a shallow imitation of a human meeting room.
+- What really improves how well a task gets done is not agents reviewing each other. It is deliberately keeping a Goal/Loop document on every run, stating the goal, what counts as done and the progress so far; without it, the AI's goal drifts over a long task and it wanders off on its own.
+- Given a task's goal and its rules, the coordinator can work out by itself which model to use, which Skills to load and which permissions to grant. An agent is only one temporary session of a task, and when you need parallel work you can still open several sessions at the task level; making people hand out Skills, permissions and runtime agent by agent is an extra burden. We think the only difference a user needs to perceive is the model.
 
 **2. Take in as much context as possible, and free people from the chore of organising it.**
 

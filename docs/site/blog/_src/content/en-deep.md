@@ -14,8 +14,10 @@ So I removed the role layer. A project now has one executor, and the interface s
 
 Two principles follow, and they are where DSH-projects differs most from similar products:
 
-- **Organise context around the task itself.** Work is worth splitting only when the task really needs different context. Split without that need, and multiple agents are an imitation of a human meeting room. Running things in parallel still has value, and in DSH-projects it happens at the task level: each task is one session, and several can run at once. The only difference a user needs to see is the model.
+- **Organise context around the task itself.** At bottom, multiple agents are context isolation. Splitting work across several agents in parallel is only worth it when the task can be decomposed and its subtasks have no sequential dependencies; otherwise coordination overhead and error amplification eat the gain, and what is left is a shallow imitation of a human meeting room. What really improves how well a task gets done is not agents reviewing each other. It is deliberately keeping a Goal/Loop document on every run, stating the goal, what counts as done and the progress so far; without it, the AI's goal drifts over a long task and it wanders off on its own. Given a task's goal and its rules, the coordinator can work out by itself which model to use, which Skills to load and which permissions to grant. An agent is only one temporary session of a task, and when you need parallel work you can still open several sessions at the task level; making people hand out Skills, permissions and runtime agent by agent is an extra burden. We think the only difference a user needs to perceive is the model.
 - **Take in as much context as possible.** Context comes in from the screen, messages and files by itself, and the personal assistant assigns it to the right project and task. The person doesn't carry it around.
+
+In the implementation, the Goal/Loop document is each task's context pack (section 2), and the coordinator is each project's project assistant. Model and executor can already be switched per task (section 2.3); loading Skills per task and granting permissions per task are not built yet.
 
 In the design, that becomes five goals:
 
