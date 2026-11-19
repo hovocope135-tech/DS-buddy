@@ -6,6 +6,7 @@
  * it), receipts, duplicates and quotas.
  * The same door has a second set of routes, /files: the read-only file reader on the owner's computer waits there
  * for a read request from the personal assistant and hands back its answer (mac-files.js).
+ * A third, /shot: the owner's screenshot shortcut hands in a picture to ask about (shots.js).
  */
 import { createServer } from 'node:http'
 import { createHash, timingSafeEqual } from 'node:crypto'
@@ -13,7 +14,7 @@ import { constants, openSync, fstatSync, readFileSync, closeSync } from 'node:fs
 import { isAbsolute } from 'node:path'
 
 const MAX_BODY = 4 * 1024 * 1024
-const OPERATIONS = { observation: new Set(['hello', 'chunk', 'ingest']), files: new Set(['poll', 'result']) }
+const OPERATIONS = { observation: new Set(['hello', 'chunk', 'ingest']), files: new Set(['poll', 'result']), shot: new Set(['ask', 'say', 'reply']) }
 const digest = value => createHash('sha256').update(value).digest()
 
 function validDevice(raw) {
@@ -38,8 +39,8 @@ export function loadDeviceTokens(file) {
 }
 
 export class DeviceGateway {
-  constructor({ observations, files, devices, logger }) {
-    this.observations = observations;this.files = files;this.logger = logger
+  constructor({ observations, files, shots, devices, logger }) {
+    this.observations = observations;this.files = files;this.shots = shots;this.logger = logger
     this.devices = devices.map(validDevice)
     if (new Set(this.devices.map(d => d.deviceId)).size !== this.devices.length) throw Error('设备标识重复')
   }
@@ -53,8 +54,8 @@ export class DeviceGateway {
 
   async handle(request, response) {
     const send = (status, body) => { response.writeHead(status, { 'content-type': 'application/json; charset=utf-8' });response.end(JSON.stringify(body)) }
-    const match = /^\/api\/desktop\/(observation|files)\/([a-z]+)$/.exec(new URL(request.url, 'http://device').pathname)
-    if (request.method !== 'POST' || !match || !OPERATIONS[match[1]].has(match[2]) || (match[1] === 'files' && !this.files)) { request.resume();return send(404, { error: '没有这个设备接口', code: 'NOT_FOUND' }) }
+    const match = /^\/api\/desktop\/(observation|files|shot)\/([a-z]+)$/.exec(new URL(request.url, 'http://device').pathname)
+    if (request.method !== 'POST' || !match || !OPERATIONS[match[1]].has(match[2]) || (match[1] === 'files' && !this.files) || (match[1] === 'shot' && !this.shots)) { request.resume();return send(404, { error: '没有这个设备接口', code: 'NOT_FOUND' }) }
     const device = this.device(request.headers.authorization)
     if (!device) { request.resume();return send(401, { error: '设备凭据无效', code: 'UNAUTHORIZED' }) }
     // Only a known device gets this far; an oversized body is drained, never kept or parsed.
@@ -63,6 +64,14 @@ export class DeviceGateway {
     if (size > MAX_BODY) return send(413, { error: '请求过大', code: 'TOO_LARGE' })
     let body
     try { body = JSON.parse(Buffer.concat(pieces).toString('utf8')) } catch { return send(400, { error: '请求不是有效 JSON', code: 'BAD_JSON' }) }
+    if (match[1] === 'shot') {
+      const gone = new AbortController()
+      response.once('close', () => gone.abort())
+      try {
+        const out = match[2] === 'ask' ? await this.shots.ask(device, body) : match[2] === 'say' ? this.shots.say(device, body) : await this.shots.reply(device, body, gone.signal)
+        return send(200, out)
+      } catch (error) { return send(400, { error: String(error?.message ?? error).slice(0, 300), code: 'BAD_REQUEST' }) }
+    }
     if (match[1] === 'files') {
       try {
         if (match[2] === 'result') return send(200, this.files.result(device, body))

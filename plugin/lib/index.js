@@ -46,6 +46,8 @@ import { Followups } from './followups.js'
 import { FeishuAttention } from './attention.js'
 import { FeishuLive } from './feishu-live.js'
 import { MacFiles } from './mac-files.js'
+import { Shots } from './shots.js'
+import { BoardDigest } from './board-digest.js'
 import { ExternalRuntime } from './external-runtime.js'
 
 export const name = 'mira-projects'
@@ -100,6 +102,9 @@ export function apply(ctx, config = {}) {
     ensureHub(hubStore)
     const retention = new SourceRetention(hubStore, store)
     const hubDriver = new Driver(ctx, hubStore, makeMessage, {
+      // The personal assistant can be given its own model (hub_set_model, the 助理与模型 page) like any project assistant;
+      // without this, a Session of an assistant with a model set cannot start (found 2026-11-18).
+      installModelSelection,
       rolePrompt: project => hubRolePrompt(project),
       liveContext: hubLiveContext,
       wakeText: hubWakeText,
@@ -120,16 +125,21 @@ export function apply(ctx, config = {}) {
     if (deviceTokenFile) {
       // v4: the same entrance carries the assistant's read requests to the file reader on the owner's computer.
       hub.macFiles = new MacFiles({ hubStore })
-      const gateway = new DeviceGateway({ observations: hub.observations, files: hub.macFiles, devices: loadDeviceTokens(deviceTokenFile), logger: ctx.logger })
+      // 截图来问: the screenshot shortcut on the owner's computer hands its picture in through the same entrance; one side
+      // call (defined below, called only later) picks the conversation it belongs to.
+      hub.shots = new Shots({ hubStore, projects: store, root: join(root, '_shots'), logger: ctx.logger, complete: call => sideCall('mira-shot-match', 3000)(call), personal: () => hub.personal })
+      const gateway = new DeviceGateway({ observations: hub.observations, files: hub.macFiles, shots: hub.shots, devices: loadDeviceTokens(deviceTokenFile), logger: ctx.logger })
       const port = Number(config.devicePort ?? process.env.MIRA_DEVICE_PORT ?? 18199)
       ctx.effect(() => {
         gateway.listen(port).then(bound => ctx.logger.info?.(`mira-projects: device entrance on 127.0.0.1:${bound}`), error => ctx.logger.warn('mira-projects: device entrance did not start', error))
         return () => { void gateway.close() }
       }, 'mira-projects: device entrance')
     }
+    // Budgets leave room for models that think before they answer (KTH coding-model-1112 spent 600 tokens thinking on a
+    // single pick, 2026-11-18): the reply comes after the thinking, inside the same max.
     // v4: one side call to DSH's default model (the way DSH titles sessions): no conversation, no tools, nothing the owner did
     // not already let the device send. The computer's history and the owed-reply check each make one per window or conversation.
-    const sideCall = (kind, maxTokens = 1500) => async ({ system, input }) => {
+    const sideCall = (kind, maxTokens = 4000) => async ({ system, input }) => {
       const llm = ctx.get('llm'), route = hubDriver.defaultModel()
       if (!llm || !route?.provider) throw new Error('DSH 默认模型尚未就绪')
       const signal = AbortSignal.timeout(120_000)
@@ -151,6 +161,8 @@ export function apply(ctx, config = {}) {
     // 巡看: in the day, about every half hour when something changed, one quiet look over everything; suggestions only.
     hub.nextSteps = new NextSteps({ hubStore, projects: store, logger: ctx.logger, complete: sideCall('mira-next-steps', 4000), muted: () => hub.dream.muted(),
       everyMs: Number(config.nextStepsMinutes ?? NEXT_STEPS_EVERY_MINUTES) * 60_000 })
+    // 待你决定's project paragraphs: a short spoken summary per moving project, rewritten when that project changes.
+    hub.boardDigest = new BoardDigest({ hubStore, projects: store, logger: ctx.logger, complete: sideCall('mira-board-digest', 6000) })
     hub.attention = new FeishuAttention({ hubStore, request: reason => hubActions.request(reason) })
     hub.feishuLive = new FeishuLive({ executable: config.feishuCliExecutable })
     ctx.effect(() => () => hub.feishuLive.stop(), 'mira-projects: feishu live')
@@ -158,7 +170,7 @@ export function apply(ctx, config = {}) {
     ctx.effect(() => () => hub.personal.close(), 'mira-projects: personal search index')
     ctx.effect(() => () => retention.close(), 'mira-projects: source retention')
     ctx.effect(() => {
-      const timer = setInterval(() => { try { retention.collect() } catch (error) { ctx.logger.warn('原文保留清理未完成', error) };hub.observations.summarize().catch(error => ctx.logger.warn('观察窗口摘要失败', error));hub.observations.retryImportant().catch(error => ctx.logger.warn('观察重要信号重试失败', error));hub.observations.maintenance.collect().catch(error => ctx.logger.warn('观察图片GC失败', error));hub.history.tick().catch(error => ctx.logger.warn('电脑历史整理失败', error));hub.followups.tick().then(() => hub.attention.tick()).catch(error => ctx.logger.warn('待回复检查失败', error));hub.autoMemory.tick().catch(error => ctx.logger.warn('记忆提炼失败', error));hub.projectIcons.tick().catch(error => ctx.logger.warn('项目图标没选出来', error));hub.dream.tick();hub.nextSteps.tick() }, 60_000)
+      const timer = setInterval(() => { try { retention.collect() } catch (error) { ctx.logger.warn('原文保留清理未完成', error) };hub.observations.summarize().catch(error => ctx.logger.warn('观察窗口摘要失败', error));hub.observations.retryImportant().catch(error => ctx.logger.warn('观察重要信号重试失败', error));hub.observations.maintenance.collect().catch(error => ctx.logger.warn('观察图片GC失败', error));hub.history.tick().catch(error => ctx.logger.warn('电脑历史整理失败', error));hub.followups.tick().then(() => hub.attention.tick()).catch(error => ctx.logger.warn('待回复检查失败', error));hub.autoMemory.tick().catch(error => ctx.logger.warn('记忆提炼失败', error));hub.projectIcons.tick().catch(error => ctx.logger.warn('项目图标没选出来', error));hub.dream.tick();hub.nextSteps.tick();hub.boardDigest.tick().catch(error => ctx.logger.warn('看板段落没写成', error)) }, 60_000)
       timer.unref()
       return () => { clearInterval(timer);hub.observations.close() }
     }, 'mira-projects: observation maintenance')

@@ -1190,6 +1190,24 @@ test('r29: the coordinator keeps thread ids out of the chat; a card Mira withdra
   assert.doesNotMatch(rolePrompt(project, MIRA), /别写 t_ 开头的线程 id/)
 })
 
+test('a task is named as a link the owner can click; only its address carries the id (2026-11-18)', () => {
+  const env = setup(async () => {})
+  const { projectId } = env.actions.createProject({ name: '任务链接' })
+  const project = env.store.get(projectId)
+  env.actions.ownerPost({ projectId, text: '开工' })
+  const { threadId } = env.actions.openThread(project, { title: '梳理群成员在做什么', brief: '梳理', assignee: '工程师' })
+  env.actions.assistantPost(project, COORDINATOR, `[梳理群成员在做什么](https://task.local/${threadId}) 交了：人员依赖和 5 个议题，等你看一眼。`)
+  assert.throws(() => env.actions.assistantPost(project, COORDINATOR, `[${threadId}](https://task.local/${threadId}) 交了`), /群聊里别写线程 id/, 'the id as the visible words is still refused')
+  assert.throws(() => env.actions.assistantPost(project, COORDINATOR, `[梳理](https://task.local/${threadId}) 交了（${threadId}）`), /群聊里别写线程 id/)
+  const prompt = rolePrompt(project, COORDINATOR)
+  assert.match(prompt, /写成 \[任务标题\]\(https:\/\/task\.local\/线程id\)/)
+  assert.match(prompt, /告诉他时一定带上那个任务的链接/)
+  assert.match(prompt, /开任务不用先问他/)
+  assert.match(prompt, /对他来说只有一个助理/)
+  assert.match(prompt, /任务标题：他以后只凭标题/)
+  assert.match(prompt, /他的每句话都要有回应，用最小的那种/)
+})
+
 test('r30: Mira cannot relay; a loose end whose thread was accepted is named on her memory_write; 「先不做了」 without a thread stays hers', () => {
   // cloud-run-27 #276: Mira message_coordinator'd the owner's chat question (stamped from_thread="ra"); #412: she wrote the
   // engineer's unput choice into open_loops after the thread closed and said nothing; #536: 「@Mira …先不做了…把那条清掉」 woke the coordinator.

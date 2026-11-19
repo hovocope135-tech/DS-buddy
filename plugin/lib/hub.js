@@ -670,7 +670,8 @@ export function renderHubItem(hub, event, now) {
   const nonce = hub.nonce
   switch (event.type) {
     case 'message.posted':
-      return `<item seq="${event.seq}" kind="personal_message" id="${event.messageId}" from="${event.author?.kind === 'human' ? '用户' : '个人助理'}" trust="${event.trust}" nonce="${nonce}">${escapeText(event.text)}</item>`
+      // A reminder that came with his words (截图来问): material, read beside them, never his words or an instruction.
+      return `<item seq="${event.seq}" kind="personal_message" id="${event.messageId}" from="${event.author?.kind === 'human' ? '用户' : '个人助理'}" trust="${event.trust}" nonce="${nonce}">${escapeText(event.text)}</item>${event.context ? `\n<system-reminder for="${event.messageId}" trust="external" nonce="${nonce}">${escapeText(event.context)}</system-reminder>` : ''}`
     case 'project.attention': {
       const current = event.threadId && now ? now(event.projectRef, event.threadId) : null
       return `<item seq="${event.seq}" kind="project_attention" ref="${event.ref}" project="${attr(event.projectName)}" project_id="${event.projectRef}"${event.threadId ? ` thread="${event.threadId}"` : ''}${current ? ` now="${attr(current)}"` : ''} type="${event.kind}" trust="system" nonce="${nonce}">${escapeText(event.text)}</item>`

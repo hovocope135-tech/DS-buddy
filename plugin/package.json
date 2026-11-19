@@ -1,7 +1,7 @@
 {
   "name": "dsh-mira-projects",
   "version": "0.1.0",
-  "description": "DS-buddy: a context layer for DeepSeek Harness. Projects, tasks, one decisions board and a personal assistant, so every agent gets exactly the context it needs.",
+  "description": "DSH-projects: a context layer for DeepSeek Harness. Projects, tasks, one decisions board and a personal assistant, so every agent gets exactly the context it needs.",
   "type": "module",
   "main": "lib/index.js",
   "exports": {

@@ -552,7 +552,8 @@ export class Actions {
     const threadId = key === COORDINATOR || key === MIRA ? null : key.slice(2)
     // cloud-run-25 #14 / #70, cloud-run-26 #15 / #110 / #416 / #478 (r29): 「开了两条：…→ @工程师（t_32a328bd56）」. The owner
     // sees thread titles and 「#1」「#2」, never t_ ids; a chat line carrying one is debris. Thread messages are left alone.
-    if (threadId === null && /\bt_[0-9a-f]{8,12}\b/.test(content)) throw new Error('群聊里别写线程 id（t_…）：用户看到的是线程标题和「#1」「#2」，id 他看不到也用不上。说标题就行（「拆 recap 数据接口那条」），这条重发一遍。')
+    // A task link [title](https://task.local/t_…) shows only its title; the id in its address is for the page, not for reading.
+    if (threadId === null && /\bt_[0-9a-f]{8,12}\b/.test(content.replace(/\]\(https:\/\/task\.local\/t_[0-9a-f]{8,12}\)/g, ']()'))) throw new Error('群聊里别写线程 id（t_…）：用户看到的是线程标题和「#1」「#2」，id 他看不到也用不上。说标题，或写成链接 [任务标题](https://task.local/线程id)，这条重发一遍。')
     // cloud-run-27 #536 → #539 (r30): 「这件事归 Mira 记，她已被点名。」 — the owner had @'d Mira; woken for an acceptance that was
     // not there, the coordinator announced her instead of keeping quiet. The protocol has said so since r26; now the platform
     // does, and only while the owner's latest chat line did @Mira — 「要 Mira 答得 @Mira」 for a line that did not is his job.

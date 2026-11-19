@@ -298,6 +298,9 @@ export class Dream {
     try {
       const rhythm = this.rhythm(now), material = this.material(now)
       if (material.words === 0) {
+        // A fresh install started at night (or a night before the owner has said anything) must not use up the night:
+        // nothing is written, so the night can still run once the owner has typed something (finding 2026-11-18).
+        if (!force) return null
         return this.hubStore.append(HUB_ID, { type: 'dream.done', day, rules: DREAM_RULES, startedAt: started, rhythm, picked: [], dropped: [], empty: [], diary: null, line: null, rejected: ['这一天没有他自己打的字，今晚不做梦'] })
       }
       const intent = this.checkIntent(await this.complete({ system: INTENT_SYSTEM, input: material.text }), material.items)

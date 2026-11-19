@@ -90,6 +90,14 @@ test('a night with nothing the owner typed writes an empty dream without asking 
   assert.equal(done.picked.length, 0); assert.equal(f.calls.length, 0)
 })
 
+test('a night that starts before the owner has typed anything writes nothing, so the night can still run later', async t => {
+  const f = setup(t, { complete: async () => { throw new Error('should not be called') } })
+  f.set(at(20, 5, 45))
+  assert.equal(await f.dream.run(), null)
+  assert.equal(f.dream.done('2026-11-20'), undefined)
+  assert.equal(f.dream.due().ok, true, 'the night is not used up')
+})
+
 test('the owner answers each item; 别提这个 mutes it; the page shows the newest dream with the answers', async t => {
   const night = JSON.stringify({ picked: [{ lane: 'read', title: '看说明', body: '还没打开。', refs: ['f1'] }] })
   const diary = JSON.stringify({ line: '早。', opening: '', night: [], closing: '' })

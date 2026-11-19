@@ -25,7 +25,7 @@ export const MAX_OPEN = 4
 export const MAX_NEW_PER_RUN = 2
 export const MAX_PER_DAY = 10
 export const VIA = 'next-steps'
-const QUIET_TYPES = new Set(['nextsteps.ran', 'observation.device', 'observation.summary', 'tool.called', 'inbox.acked', 'turn.ended', 'mira.requested'])
+const QUIET_TYPES = new Set(['nextsteps.ran', 'observation.device', 'observation.summary', 'tool.called', 'inbox.acked', 'turn.ended', 'mira.requested', 'shot.matched', 'shot.claimed', 'board.digest'])
 const WORDS = 40, WORD_CLIP = 400, TASKS = 30, MESSAGES = 30, ACTIVITIES = 12, SET_ASIDE_DAYS = 7
 
 export const NEXT_STEPS_SYSTEM = `你是用户的个人助理。白天每隔一段时间，你把他的整个现场过一遍：手上的任务、他自己打的字、飞书里的消息、电脑上在做的事。你的价值是减少他重新拼上下文的成本：替他找回容易漏掉的事，把下一步准备成一句完整的话，他点一下就能交给你去做。这一步你只想和写，不发消息、不改文件、不开任务。

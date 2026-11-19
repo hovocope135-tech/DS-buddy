@@ -6,6 +6,7 @@
 
 import { COORDINATOR, MIRA, PERSONAL_NAME, STARTER_MEMBERS, workerKey } from './store.js'
 import { STATE_LABEL } from './protocol.js'
+import { homedir } from 'node:os'
 import { dockHtml } from './dock.js'
 import { HUB_ID, todayView } from './hub.js'
 import { cardCovered } from './today.js'
@@ -111,10 +112,23 @@ function card(project, thread, driver, deviceExecutions) {
     lastTurn: project.turns.get(key) ?? null,
     activity: project.activity.get(key) ?? null,
     toolCalls: Object.fromEntries(project.toolCalls.get(key) ?? []),
-    inputs: thread.inputs ?? [],
+    inputs: shownInputs(thread.inputs ?? [], [thread.workspace?.cwd, project.cwd]),
     children, experience,
     sessions: sessions.map(s => ({ ...s, current: s.id === session?.sessionId })),
   }
+}
+
+/**
+ * The files a task read, as the task board shows them: relative to the task's or project's folder, and `~` for the home
+ * folder, so the page (and a screenshot of it) never shows the machine's user name. Same file twice shows once.
+ */
+export function shownInputs(paths, roots, home = homedir()) {
+  const bases = roots.filter(Boolean).map(r => r.replace(/\/+$/, ''))
+  const shown = paths.map(p => {
+    for (const base of bases) if (p.startsWith(base + '/')) return p.slice(base.length + 1)
+    return home && p.startsWith(home + '/') ? '~' + p.slice(home.length) : p
+  })
+  return [...new Set(shown)]
 }
 
 /** Messages, relays and the thread's own lifecycle events, in log order. */
@@ -437,6 +451,15 @@ export function registerRoutes(ctx, { store, driver, actions, mira, hub, gitlab,
     } catch (error) { return json({ error: error.message }, error.code === 'IMAGE_UNAVAILABLE' ? 410 : 404) }
   } })
 
+  // 截图来问: the page picks up a screenshot the shortcut handed in, and fetches the picture to put in the composer.
+  const shots = () => { if (!hub?.shots) throw new Error('当前环境未开启截图来问');return hub.shots }
+  const disposeShotImage = ctx.connection.fetch.register({ path: '/api/mira-projects/shot/image', methods: ['GET'], requestBody: 'buffered', fetch: async request => {
+    try {
+      const { bytes, mime } = shots().image(new URL(request.url).searchParams.get('id'))
+      return new Response(bytes, { headers: { 'content-type': mime, 'cache-control': 'no-store', 'x-content-type-options': 'nosniff', 'content-security-policy': "default-src 'none'; sandbox" } })
+    } catch (error) { return json({ error: error.message }, error.code === 'IMAGE_UNAVAILABLE' ? 410 : 404) }
+  } })
+
   const disposeToday = ctx.connection.fetch.register({
     path: TODAY_PATH,
     methods: ['GET'],
@@ -526,6 +549,7 @@ export function registerRoutes(ctx, { store, driver, actions, mira, hub, gitlab,
             return json(body.op === 'feishuLiveConnect' ? await hub.feishuLive.connect() : await hub.feishuLive.status())
           }
           // v4: reading the owner's computer. The page can see the state and pause it; only the assistant's tool asks for a read.
+          case 'shotClaim': return json(shots().claim(body.id))
           case 'macFilesStatus':
           case 'macFilesMode': {
             if (!hub?.macFiles) throw new Error('当前环境未开启读电脑')
@@ -660,6 +684,6 @@ export function registerRoutes(ctx, { store, driver, actions, mira, hub, gitlab,
     unsubscribe()
     unsubscribeHub?.()
     wakeAll()
-    await Promise.all([disposeRevision(), disposeState(), disposeAction(), disposeDock(), disposeToday(), disposeTodayView(), disposeModels(), disposeAgent(), disposeFile(), disposePersonal(), disposeSource(), disposeObservations(), disposeObservationImage(), disposeWorkers(), disposeWorkersView(), disposeDiary()])
+    await Promise.all([disposeRevision(), disposeState(), disposeAction(), disposeDock(), disposeToday(), disposeTodayView(), disposeModels(), disposeAgent(), disposeFile(), disposePersonal(), disposeSource(), disposeObservations(), disposeObservationImage(), disposeShotImage(), disposeWorkers(), disposeWorkersView(), disposeDiary()])
   }
 }

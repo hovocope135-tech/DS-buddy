@@ -39,4 +39,8 @@ test('the workspace scene celebrates a fresh finish for three minutes, then show
   assert.equal(client.workspaceScene([waitingOld], false, now).title, '1 项待处理')
   assert.equal(client.workspaceScene([{ ...fresh, resolved: true }], false, now).state, 'sleeping')
   assert.equal(client.workspaceScene([], false, now).state, 'sleeping')
+  const asking = { state: 'blocked', updatedAt: now - 30 * 60e3 }
+  const first = client.workspaceScene([fresh, asking, running], true, now)
+  assert.equal(first.state, 'waiting', 'a question for the owner outranks a fresh finish and running work')
+  assert.equal(first.title, '1 项等你拍板')
 })

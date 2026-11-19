@@ -11,6 +11,7 @@ import { STATE_LABEL, escapeText } from './protocol.js'
 import { activityRows } from './computer-history.js'
 import { owedReplies } from './followups.js'
 import { ATTENTION_DAILY_WAKES, attentionMode, attentionWokeToday } from './attention.js'
+import { boardView } from './board-digest.js'
 
 const DAY_MS = 24 * 60 * 60_000
 const PC_WINDOW_MIN = 10
@@ -247,6 +248,8 @@ export function buildDay(store, hub, { day, now = Date.now(), status, execution 
     about: hub ? hub.aboutOrder.map(id => hub.about.get(id)).filter(item => item.forgottenAt === null).reverse() : [],
     // What the owner told her to forget: hidden from her, kept here so it can be brought back.
     forgotten: hub ? { about: hub.aboutOrder.map(id => hub.about.get(id)).filter(item => item.forgottenAt !== null).slice(-20).reverse(), memory: hub.hubForgotten.slice(-20).reverse() } : { about: [], memory: [] },
+    // 待你决定: the moving projects with their spoken paragraph, then the quiet ones (board-digest.js).
+    board: isToday ? boardView(store, hub, now) : null,
     pcMinutes: [...hours.values()].reduce((n, e) => n + e.minutes, 0),
     devices: [...pcDevices.values()].sort((a, b) => b.lastAt - a.lastAt),
   }

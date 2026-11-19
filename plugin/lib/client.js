@@ -2049,11 +2049,14 @@ window.__ModuleLoader__.load({
 		function AppIcon({ name, size = 16 }) {
 			const spec = iconSpec(name), inner = Math.round(size * (spec.full ? 1 : 0.68));
 			// Mira is a character, not a brand: her own pixel slime, as on her avatar.
-			if (spec.sticker) return h("span", { className: "mp4-app mp4-app-sticker", title: name, "aria-hidden": true, style: { width: size, height: size } },
-				h(PixelMark, { state: "sleeping", size }));
+			if (spec.sticker) return h(MiraAvatar, { size, title: name });
 			return h("span", { className: "mp4-app", title: name, "aria-hidden": true, style: { width: size, height: size, background: spec.bg, color: spec.fg, fontSize: Math.round(size * 0.58) } },
 				spec.letter ? spec.letter : h("svg", { viewBox: "0 0 24 24", width: inner, height: inner, fill: "currentColor" },
 					spec.shapes ? spec.shapes.map(([d, fill], i) => h("path", { key: i, d, fill })) : h("path", { d: APP_ICON_PATHS[spec.d], fillRule: "evenodd" })));
+		}
+		/** The personal assistant wherever it appears as a source: its pixel figure, as the owner made it. */
+		function MiraAvatar({ size = 16, title }) {
+			return h("span", { className: "mp4-app mp4-app-sticker", title, "aria-hidden": true, style: { width: size, height: size } }, h(MiraPortrait, { size }));
 		}
 		function Dot({ tone }) { return h("i", { className: "mp4-dot mp4-dot-" + tone, "aria-hidden": true }); }
 		const allTasks = snap => (snap.projects || []).flatMap(p => (p.threads || []).map(t => ({ p, t })));
@@ -2081,7 +2084,7 @@ window.__ModuleLoader__.load({
 					const { sessionId } = await act("openChat", { projectId });
 					shell.workspace.openSession(sessionId);
 					revealTabs(sessionId, [PROJECT_TASKS_KIND]);
-					return;
+					return sessionId;
 				} catch (_e) { /* fall through to the project page */ }
 			}
 			navigateProject(projectId);
@@ -2302,9 +2305,19 @@ window.__ModuleLoader__.load({
 				h("path", { d: eyes }),
 				(LINE_ACCESSORIES[look.accessory] || []).map((d, i) => h("path", { key: i, d })));
 		}
+		/** The assistant in the nav: its dot, a little inside the box the host's line icons use. */
+		function MiraEntryDot({ size = 20 }) {
+			return h("span", { className: "mp4-entry-dot", style: { width: size, height: size } }, h(MiraPortrait, { size }));
+		}
+		/** The assistant's pixel avatar at the head of its own conversation; nothing in other conversations. */
+		function MiraHeaderAvatar({ sessionId }) {
+			const personal = usePersonal();
+			if (!sessionId || personal.sessionId !== sessionId) return null;
+			return h("span", { className: "mp4-head-avatar", title: personal.look && personal.look.name || "个人助理" }, h(MiraPortrait, { size: 22 }));
+		}
 		/** The Mira entry in DSH's panel list, with how many things wait for the owner. */
 		function MiraEntryIcon({ size }) {
-			return h("span", { className: "mp4-entry", "data-mira-entry": "" }, h(MiraLineIcon, { size: size || 20 }));
+			return h("span", { className: "mp4-entry", "data-mira-entry": "" }, h(MiraEntryDot, { size: size || 20 }));
 		}
 
 		// ---------------------------------------------------------------- 项目: every project, then one project's conversation
@@ -2509,11 +2522,71 @@ window.__ModuleLoader__.load({
 				over ? h("button", { type: "button", className: "mp4-link-btn mp4-clamp-more", onClick: () => setOpen(v => !v) }, open ? "收起" : "展开") : null);
 		}
 
-		/** A file the task delivered: name, folder, size and version; the row opens a read-only preview, the icon downloads it. */
+		/**
+		 * A delivered file in its own right-panel tab (the owner, 2026-11-18: reading a long .md inside the 交付 list, scrolling in
+		 * a box, was cramped). The tab's address names the file, so DSH keeps the tab across a reload and focuses the open one
+		 * when the same file is clicked again; the name is the tab's title.
+		 */
+		const DOC_TAB_ID = "mira-projects.doc", DOC_TAB_KIND = "mira-projects-doc", DOC_PREFIX = "dsh-resource://mira-projects-doc/";
+		const docAddress = (projectId, file) => DOC_PREFIX + [projectId, file.id, String(file.revision), file.path].map(encodeURIComponent).join("/");
+		function docOf(address) {
+			if (typeof address !== "string" || !address.startsWith(DOC_PREFIX)) return null;
+			try {
+				const [projectId, fileId, revision, path] = address.slice(DOC_PREFIX.length).split("/").map(decodeURIComponent);
+				return projectId && fileId && path && Number(revision) > 0 ? { projectId, fileId, revision: Number(revision), path, name: path.split("/").at(-1) } : null;
+			} catch (_e) { return null; }
+		}
+		function openDocTab(projectId, file) {
+			try { shell.sidebar?.openResource(docAddress(projectId, file), { kind: DOC_TAB_KIND }); return true; } catch (_e) { return false; }
+		}
+		const isMarkdownPath = (path, mime) => /\.(md|markdown)$/i.test(path) || mime === "text/markdown";
+		const isHtmlPath = (path, mime) => /\.html?$/i.test(path) || mime === "text/html";
+		const isImagePath = (path, mime) => /^image\/(png|jpe?g|gif|webp|svg\+xml)$/.test(mime || "") || /\.(png|jpe?g|gif|webp|svg)$/i.test(path);
+		/** A file's content as the owner reads it: Markdown rendered, a web page in a sandboxed frame, an image as itself, else plain text. */
+		function DocContent({ path, mime, text, src, name }) {
+			if (isImagePath(path, mime)) return h("img", { className: "mp4-dfile-img", src, alt: name });
+			if (text === null) return h(Loading, null);
+			if (isMarkdownPath(path, mime)) return h("div", { className: "mp-markdown mp4-dfile-md" }, h(P.MarkdownText, { text, labels: MARKDOWN_LABELS }));
+			if (isHtmlPath(path, mime)) return h("iframe", { className: "mp4-dfile-frame", title: name, sandbox: "allow-scripts", srcDoc: text });
+			return h("pre", null, text);
+		}
+		/** 请求修改 from a panel that is not inside the conversation: the composer on screen beside it. */
+		function draftIntoVisible(text) {
+			const editor = [...document.querySelectorAll('[contenteditable="true"]')].find(e => e.getClientRects().length);
+			return editor ? draftInto(editor, text) : false;
+		}
+		/** The document tab: the file at the version that was clicked, with download and 请求修改, in a full-height reading pane. */
+		function DocTab({ useTabInfo }) {
+			const info = useTabInfo ? useTabInfo() : null, doc = docOf(info?.tab?.contentId);
+			const [text, setText] = useState(null), [error, setError] = useState(null);
+			const src = doc ? fileURL(doc.projectId, doc.fileId, doc.revision) : null;
+			useEffect(() => {
+				if (!doc || isImagePath(doc.path)) return;
+				let alive = true;
+				setText(null); setError(null);
+				fetch(src, { credentials: "same-origin" }).then(r => { if (!r.ok) throw Error("文件暂不可读"); return r.text(); })
+					.then(t => { if (alive) setText(t); }, e => { if (alive) setError(e.message); });
+				return () => { alive = false; };
+			}, [src]);
+			if (!doc) return h("div", { className: "mp4-tabpane" }, h("p", { className: "mp4-muted" }, "这个标签页的文件信息丢了，回到任务的交付里再点一次。"));
+			const dir = doc.path.slice(0, doc.path.length - doc.name.length).replace(/\/$/, "");
+			return h("div", { className: "mp4-doc" },
+				h("div", { className: "mp4-doc-bar" },
+					h("span", { className: "mp4-doc-meta mp4-ell" }, parts(dir, `第 ${doc.revision} 版`)),
+					h("button", { type: "button", className: "mp4-pill-btn", onClick: () => { if (!draftIntoVisible(`请修改 ${doc.path}：`)) setError("没找到这个任务的输入框，先打开任务对话"); } }, h(Icon, { name: "reply", size: 14 }), "请求修改"),
+					h("a", { className: "mp4-dfile-dl", href: fileURL(doc.projectId, doc.fileId), download: true, title: "下载", "aria-label": `下载 ${doc.name}` }, h(Icon, { name: "download", size: 16 }))),
+				h("div", { className: "mp4-doc-body" + (isHtmlPath(doc.path) ? " mp4-doc-body-wide" : "") },
+					error ? h("p", { className: "mp4-err" }, error) : h(DocContent, { path: doc.path, text, src, name: doc.name })));
+		}
+
+		/**
+		 * A file the task delivered: name, folder, size and version. The row opens the file in its own tab; the arrow unfolds a
+		 * preview here, to read without leaving the list; the icon downloads it.
+		 */
 		function DeliveredFile({ project, file, startOpen = false }) {
 			const [open, setOpen] = useState(false), [text, setText] = useState(null), [error, setError] = useState(null);
 			// A web page renders in a sandboxed frame (scripts may run, but it gets no access to this page or its cookies); an image shows as itself.
-			const isImage = /^image\/(png|jpe?g|gif|webp|svg\+xml)$/.test(file.mime), isHtml = /\.html?$/i.test(file.path) || file.mime === "text/html";
+			const isImage = isImagePath(file.path, file.mime), isHtml = isHtmlPath(file.path, file.mime);
 			const readable = isImage || ((file.mime.startsWith("text/") || file.mime === "application/json") && file.size <= 512 * 1024);
 			const name = file.path.split("/").at(-1), dir = file.path.slice(0, file.path.length - name.length).replace(/\/$/, "");
 			useEffect(() => { if (startOpen && readable) toggle(); }, []);
@@ -2526,13 +2599,16 @@ window.__ModuleLoader__.load({
 					setText(await response.text());
 				} catch (e) { setError(e.message); }
 			};
+			const openTab = () => { if (!openDocTab(project.id, file)) toggle(); };
 			return h("div", { className: "mp4-dfile" },
 				h("div", { className: "mp4-dfile-row" },
-					h("button", { type: "button", className: "mp4-dfile-main", disabled: !readable, "aria-expanded": readable ? open : undefined, title: readable ? (open ? "收起预览" : "预览") : undefined, onClick: readable ? toggle : undefined },
+					h("button", { type: "button", className: "mp4-dfile-main", disabled: !readable, title: readable ? "在新标签页打开" : undefined, onClick: readable ? openTab : undefined },
 						h(Icon, { name: "note", size: 16 }),
 						h("span", { className: "mp4-dfile-text" }, h("b", { className: "mp4-ell" }, name), h("span", { className: "mp4-ell" }, parts(dir, sizeLabel(file.size), `第 ${file.revision} 版`)))),
+					readable ? h("button", { type: "button", className: "mp4-dfile-dl", "aria-expanded": open, title: open ? "收起预览" : "在这里预览", "aria-label": `${open ? "收起" : "预览"} ${name}`, onClick: toggle },
+						h("span", { className: "mp-sec-chev" + (open ? " mp-sec-chev-on" : "") }, h(Icon, { name: "chevron", size: 12 }))) : null,
 					h("a", { className: "mp4-dfile-dl", href: fileURL(project.id, file.id), download: true, title: "下载", "aria-label": `下载 ${name}` }, h(Icon, { name: "download", size: 16 }))),
-				open ? h("div", { className: "mp4-dfile-preview" + (isHtml || isImage ? " mp4-dfile-preview-wide" : "") }, h("div", { className: "mp4-dfile-bar" }, h("button", { type: "button", className: "mp4-pill-btn", onClick: e => { if (!draftInto(e.currentTarget, `请修改 ${file.path}：`)) setError("没找到这个任务的输入框，先打开任务对话"); } }, h(Icon, { name: "reply", size: 14 }), "请求修改")), error ? h("p", { className: "mp4-err" }, error) : isImage ? h("img", { className: "mp4-dfile-img", src: fileURL(project.id, file.id, file.revision), alt: name }) : text === null ? h(Loading, null) : /\.(md|markdown)$/i.test(file.path) || file.mime === "text/markdown" ? h("div", { className: "mp-markdown mp4-dfile-md" }, h(P.MarkdownText, { text, labels: MARKDOWN_LABELS })) : isHtml ? h("iframe", { className: "mp4-dfile-frame", title: name, sandbox: "allow-scripts", srcDoc: text }) : h("pre", null, text)) : null);
+				open ? h("div", { className: "mp4-dfile-preview" + (isHtml || isImage ? " mp4-dfile-preview-wide" : "") }, h("div", { className: "mp4-dfile-bar" }, h("button", { type: "button", className: "mp4-pill-btn", onClick: e => { if (!draftInto(e.currentTarget, `请修改 ${file.path}：`) && !draftIntoVisible(`请修改 ${file.path}：`)) setError("没找到这个任务的输入框，先打开任务对话"); } }, h(Icon, { name: "reply", size: 14 }), "请求修改")), error ? h("p", { className: "mp4-err" }, error) : h(DocContent, { path: file.path, mime: file.mime, text, src: fileURL(project.id, file.id, file.revision), name })) : null);
 		}
 
 		/** What was counted when a task last changed hands, in a few words. */
@@ -3161,8 +3237,9 @@ window.__ModuleLoader__.load({
 			const run = async work => { setError(null); try { await work(); } catch (e) { setError(String(e?.message || e)); } };
 			const react = (p, reaction) => run(() => act("dreamReact", { day: say.dream.day, lane: p.lane, reaction }));
 			// Where a note came from: the app's own mark (飞书), the computer, or a bulb for the assistant's own idea.
-			const sourceIcon = n => n.kind === "suggest" ? h(ProjectGlyph, { name: "lightbulb", color: "purple", size: 16 })
-				: n.app === "电脑" ? h("span", { className: "mp4-kb-glyph" }, h(Icon, { name: "monitor", size: 16 })) : n.app && n.app !== "个人助理" ? h(AppIcon, { name: n.app, size: 16 }) : h(ProjectGlyph, { name: "lightbulb", color: "purple", size: 16 });
+			// Where a note came from: the app's own mark (飞书, 邮件), the computer, or the assistant's own avatar for its ideas.
+			const sourceIcon = (n, size = 16) => n.kind === "suggest" || !n.app || n.app === "个人助理" ? h(MiraAvatar, { size, title: "个人助理" })
+				: n.app === "电脑" ? h("span", { className: "mp4-kb-glyph" }, h(Icon, { name: "monitor", size })) : h(AppIcon, { name: n.app, size });
 			const card = ({ key, icon, iconTip, title, body, when, open, dismiss, quiet, tip }) => h("div", {
 				key, className: "mp4-kb-card" + (quiet ? " mp4-kb-quiet" : ""), role: "button", tabIndex: 0, title: tip,
 				onClick: e => open(e.currentTarget), onKeyDown: e => { if (e.key === "Enter" && e.target === e.currentTarget) open(e.currentTarget); },
@@ -3197,6 +3274,9 @@ window.__ModuleLoader__.load({
 			const head = (label, tools) => h("h3", { className: "mp4-kb-head" }, label, tools.some(Boolean) ? h("span", { className: "mp4-kb-tools" }, tools) : null);
 			const news = notes.map(note), shownNews = whole.news ? news : news.slice(0, 8);
 			const shownGroups = whole.progress ? groups : groups.slice(0, 4);
+			if (today.board) return h(React.Fragment, null,
+				h(MiraBoard, { board: today.board, known, notes, noteRow: n => noteRow(n, sourceIcon, run, react, draft), whole, setWhole, diary, openTaskBy }),
+				error ? h("p", { className: "mp4-err" }, error) : null);
 			const blocks = [
 				groups.length || doneCount ? h("section", { key: "progress", className: "mp4-kb-lane mp4-kb-lane-progress" }, head("项目进展", [doneTool]),
 					groups.length ? h("div", { className: "mp4-kb-cards" }, shownGroups.map(({ p, cards }) => h("div", { key: p.id, className: "mp4-kb-group" },
@@ -3210,6 +3290,56 @@ window.__ModuleLoader__.load({
 				h("div", { className: "mp4-kb" }, blocks),
 				h(SkillRows, { skills }),
 				error ? h("p", { className: "mp4-err" }, error) : null);
+		}
+
+		/**
+		 * 待你决定, read like the Claude app's side panel (2026-11-18): the few projects that are really moving, each with a
+		 * short paragraph a small model rewrote from the project's record (board-digest.js) and the things that wait on you
+		 * as rows; then news and the assistant's suggestions. Quiet projects stay in the sidebar (owner 2026-11-19). Laid out like
+		 * Feishu's 任务 panel: white cards on a gray canvas, one per project and one for the news; rows light up on hover. Older waiting rows and
+		 * older news fold away. Nothing acts by itself: a row opens its task, a note puts a sentence into the composer.
+		 */
+		const BOARD_VERB = { review: "等你验收", decision: "等你拍板", failed: "没做成" };
+		const BOARD_PEEK = 3;
+		function MiraBoard({ board, known, notes, noteRow, whole, setWhole, diary, openTaskBy }) {
+			const toggle = key => setWhole(s => ({ ...s, [key]: !s[key] }));
+			const head = (label, count, tools) => h("div", { className: "mp4-bd-head" }, h("b", null, label), h("span", { className: "mp4-bd-count" }, count), tools || null);
+			const project = a => {
+				const rows = whole["rows:" + a.projectId] ? a.rows : a.rows.slice(0, BOARD_PEEK), rest = a.rows.slice(BOARD_PEEK), p = known(a.projectId);
+				return h("div", { key: a.projectId, className: "mp4-bd-proj" },
+					h("button", { type: "button", className: "mp4-bd-proj-h", title: `打开项目「${a.name}」`, onClick: () => navigateProject(a.projectId) },
+						p ? h(ProjectMark, { p, size: 16, plain: true }) : null, h("b", { className: "mp4-ell" }, a.name), h("time", null, ago(a.lastAt))),
+					a.story ? h("p", { className: "mp4-bd-story" }, a.story) : null,
+					a.rows.length ? h("div", { className: "mp4-bd-rows" },
+						rows.map(r => h("button", { key: r.threadId, type: "button", className: "mp4-bd-row", title: `打开「${r.title}」`, onClick: () => openTaskBy(a.projectId, r.threadId) },
+							h(StatusIcon, { status: r.kind, size: 16 }), h("span", { className: "mp4-bd-verb" }, BOARD_VERB[r.kind]), h("span", { className: "mp4-bd-line" }, r.line || r.title),
+							h("time", null, ago(r.since)))),
+						rest.length ? h("button", { type: "button", className: "mp4-bd-more", onClick: () => toggle("rows:" + a.projectId) },
+							whole["rows:" + a.projectId] ? "收起" : `还有 ${rest.length} 件等你，最早 ${ago(Math.min(...rest.map(r => r.since)))}`) : null) : null);
+			};
+			const shownNotes = whole.news ? notes : notes.slice(0, BOARD_PEEK);
+			const sections = [
+				board.active.length ? h("section", { key: "active", className: "mp4-bd-sec" }, head("项目进展", `${board.active.length} 个项目`), board.active.map(project)) : null,
+				notes.length || diary ? h("section", { key: "news", className: "mp4-bd-sec" }, head("新消息与建议", notes.length ? `${notes.length} 条` : "", diary),
+					notes.length ? h("div", { className: "mp4-bd-card" }, shownNotes.map(noteRow),
+						notes.length > BOARD_PEEK ? h("button", { type: "button", className: "mp4-bd-more", onClick: () => toggle("news") }, whole.news ? "收起" : `还有 ${notes.length - BOARD_PEEK} 条`) : null) : null) : null,
+			].filter(Boolean);
+			return sections.length ? h("div", { className: "mp4-bd" }, sections) : h("p", { className: "mp4-ib-empty" }, "现在没有要你处理的事。");
+		}
+		/** One piece of news or suggestion as a list row: where it came from, what it is, one line more, when; × sets it aside. */
+		function noteRow(n, sourceIcon, run, react, draft) {
+			const reply = noteAsks(n)[0][1];
+			const dismiss = n.from === "followup" ? ["不用回", () => run(() => act("followupDismiss", { conversation: n.f.conversation, through: n.f.through }))]
+				: n.from === "card" ? ["不用了", () => run(() => act("cardAction", { projectId: "hub", cardId: n.card.id, actionId: "dismiss" }))]
+				: ["不感兴趣", () => react(n.pick, "not_interested")];
+			const after = n.from === "pick" ? () => react(n.pick, n.lane === "do" ? "started" : n.lane === "read" ? "opened" : "noted") : null;
+			const open = from => { draft(from, reply); if (after) after(); };
+			return h("div", { key: n.key, className: "mp4-bd-msg", role: "button", tabIndex: 0, title: `填进输入框：${reply}`,
+				onClick: e => open(e.currentTarget), onKeyDown: e => { if (e.key === "Enter" && e.target === e.currentTarget) open(e.currentTarget); } },
+				h("span", { className: "mp4-bd-msg-ic" }, sourceIcon(n, 16)),
+				h("span", { className: "mp4-bd-msg-b" }, h("b", null, n.title), n.text ? h("span", null, n.from === "followup" ? `「${n.text}」` : n.text) : null),
+				h("time", null, n.at ? ago(n.at) : ""),
+				h("button", { type: "button", className: "mp4-kb-x", title: dismiss[0], "aria-label": dismiss[0], onClick: e => { e.stopPropagation(); dismiss[1](); } }, h(Icon, { name: "close", size: 12 })));
 		}
 
 		// ---------------------------------------------------------------- 技能自迭代: an executor's 做事说明 and its versions
@@ -3308,7 +3438,7 @@ window.__ModuleLoader__.load({
 					miraFellBackAt = 0;
 					// A stale fallback address would bring the page back on reload: drop it (a source link keeps it).
 					if (isHomeRoute() && !window.location.hash.includes("source=")) window.history.replaceState(window.history.state, "", window.location.pathname + window.location.search);
-					return;
+					return sessionId;
 				}
 			} catch (_e) { miraFellBackAt = Date.now(); /* fall through to her page */ } finally { openingMira = false; }
 			navigateHome();
@@ -3321,12 +3451,13 @@ window.__ModuleLoader__.load({
 		const homeIsFallbackOnly = () => isHomeRoute() && !window.location.hash.includes("source=") && Boolean(shell.workspace) && Date.now() - miraFellBackAt > 15e3;
 
 		/** A right-panel tab of Mira's Session; other sessions say so. */
-		function miraTab(render) {
+		function miraTab(render, look = "") {
+			const pane = "mp4-tabpane" + (look ? " " + look : "");
 			return function MiraTabBody({ sessionId }) {
 				const snap = usePersonal();
-				if (!snap.loaded) return h("div", { className: "mp4-tabpane" }, h(Loading, null));
-				if (snap.sessionId !== sessionId) return h("div", { className: "mp4-tabpane" }, h("p", { className: "mp4-muted" }, "这个会话不是个人助理的对话。"));
-				return h("div", { className: "mp4-tabpane" }, render(snap));
+				if (!snap.loaded) return h("div", { className: pane }, h(Loading, null));
+				if (snap.sessionId !== sessionId) return h("div", { className: pane }, h("p", { className: "mp4-muted" }, "这个会话不是个人助理的对话。"));
+				return h("div", { className: pane }, render(snap));
 			};
 		}
 
@@ -3430,7 +3561,7 @@ window.__ModuleLoader__.load({
 			return h(React.Fragment, null,
 				sourceRef ? null : h("div", { className: "mp4-page-head" }, h("h3", { className: "mp4-tab-title" }, "助理设置")),
 				sourceRef ? h(React.Fragment, null, h(SourcePanel, { key: sourceRef, sourceRef }), h("button", { type: "button", className: "mp4-link-btn", onClick: () => setSourceRef(null) }, "‹ 返回")) : h(React.Fragment, null, h("div", { className: "mp4-setlist" },
-					row("性格与快捷键", snap.look ? `${snap.look.name}，${hotkeyLabel(snap.look.hotkey)}${snap.look.hotkey ? " 呼出" : ""}` : "捏一个你的助理", () => openStudio()),
+					row("形象与快捷键", snap.look ? `${snap.look.name}，${hotkeyLabel(snap.look.hotkey)}${snap.look.hotkey ? " 呼出" : ""}` : "捏一个你的助理", () => openStudio()),
 					Array.isArray(snap.observationDevices) ? row("活动与设备", "电脑端采集的活动和设备", () => setDialog("observations")) : null,
 					row("邮件与飞书来源", "个人助理能读的外部资料", () => setDialog("connectors")),
 					row("飞书实时读取", "读取飞书消息和文档，只读", () => setDialog(dialog === "feishuLive" ? null : "feishuLive")),
@@ -3536,7 +3667,7 @@ window.__ModuleLoader__.load({
 		}
 
 		const MIRA_TABS = [
-			{ id: "mira-projects.mira-inbox", kind: "mira-projects-mira-inbox", title: "待你决定", order: 3, desc: "跨项目的拍板、验收和失败", body: miraTab(() => h(MiraOverview, { view: "inbox" })) },
+			{ id: "mira-projects.mira-inbox", kind: "mira-projects-mira-inbox", title: "待你决定", order: 3, desc: "跨项目的拍板、验收和失败", body: miraTab(() => h(MiraOverview, { view: "inbox" }), "mp4-tabpane-canvas") },
 			{ id: "mira-projects.mira-time", kind: "mira-projects-mira-time", title: "时间线", order: 4, desc: "今天按时间排的核心活动", body: miraTab(() => h(MiraOverview, { view: "time" })) },
 			{ id: "mira-projects.mira-tree", kind: "mira-projects-mira-tree", title: "项目与任务", order: 5, desc: "所有项目和它们的任务", body: miraTab(() => h(MiraOverview, { view: "tree" })) },
 			{ id: "mira-projects.mira-memory", kind: "mira-projects-mira-memory", title: "记忆", order: 6, desc: "个人助理记着的：关于你、工作", quiet: true, body: miraTab(() => h(MiraMemory)) },
@@ -3937,6 +4068,118 @@ window.__ModuleLoader__.load({
 				rows.length > 3 ? h("div", { className: "mp4-dock-note mp4-muted" }, `还有 ${rows.length - 3} 条`) : null,
 				error ? h("span", { className: "mp-error", role: "alert" }, error) : null);
 		}
+
+		// ---------------------------------------------------------------- 截图来问
+		/**
+		 * The screenshot shortcut on the owner's Mac hands its picture to the server, which picks the conversation it belongs
+		 * to; the helper then points this page at `#mira-shot/<id>`. The page opens that conversation, puts the picture in its
+		 * composer the way a paste would (DSH's own attachment path), and leaves the cursor there. Sending stays his.
+		 */
+		const SHOT_HASH = /^#mira-shot\/(s_[0-9a-f]{12})(?:\/(\d))?$/;
+		const shotBus = { value: null, subs: new Set(), set(v) { this.value = v; this.subs.forEach(f => f()); } };
+		const useShotBus = () => useSyncExternalStore(f => { shotBus.subs.add(f); return () => shotBus.subs.delete(f); }, () => shotBus.value, () => null);
+		const sleep = ms => new Promise(r => setTimeout(r, ms));
+		/**
+		 * Put the picture in one composer the way a paste would. DSH keeps the conversation it just left mounted (hidden),
+		 * so the editor is found from the strip DSH renders in the target conversation's own composer, never the first on the page.
+		 */
+		async function pasteShot(shot, editor) {
+			const response = await fetch(shot.image, { credentials: "same-origin", cache: "no-store" });
+			if (!response.ok) throw new Error(response.status === 410 ? "截图已清理，再按一次快捷键" : "截图没取到");
+			const blob = await response.blob(), data = new DataTransfer();
+			data.items.add(new File([blob], blob.type === "image/png" ? "截图.png" : "截图.jpg", { type: blob.type }));
+			editor.focus();
+			editor.dispatchEvent(new ClipboardEvent("paste", { clipboardData: data, bubbles: true, cancelable: true }));
+		}
+		/** Open one place for a shot (a task, a project's conversation, the assistant) and put the picture there. */
+		async function goShot(shot, place) {
+			let sessionId = null;
+			if (place.kind === "task") {
+				const state = await (await fetch(STATE_URL + "?project=", { credentials: "same-origin", cache: "no-store" })).json();
+				const thread = (state.projects || []).find(p => p.id === place.projectId)?.threads?.find(t => t.id === place.threadId);
+				sessionId = thread ? (isOutside(thread) ? thread.dshSessionId : thread.sessionId) : null;
+				// A task with no conversation of its own to type into: its project's conversation instead.
+				if (sessionId) openTask(place.projectId, thread);
+				else place = { kind: "project", projectId: place.projectId, title: place.projectName, projectName: place.projectName };
+			}
+			if (place.kind === "project") sessionId = await openProject(place.projectId);
+			if (place.kind === "assistant") sessionId = await openMira();
+			// The strip in that conversation's composer puts the picture in (ShotDock); it waits for this mark.
+			shotBus.set({ shot, here: place, sessionId, error: null, paste: Date.now() });
+		}
+		let shotTaking = null;
+		async function takeShot() {
+			const m = SHOT_HASH.exec(window.location.hash || "");
+			if (!m || shotTaking === m[1]) return;
+			shotTaking = m[1];
+			window.history.replaceState(window.history.state, "", window.location.pathname + window.location.search);
+			// The card on the Mac may have picked another row than the first: its number comes after the id.
+			try { const shot = await act("shotClaim", { id: m[1] }); await goShot(shot, shotPlaces(shot)[Number(m[2] || 0)] || shot.target); }
+			catch (e) { const sessionId = await openMira().catch(() => null); shotBus.set({ shot: null, here: { kind: "assistant" }, sessionId, error: String(e?.message || e) }); }
+			finally { shotTaking = null; }
+		}
+		/** Where a shot can go, in the order the Mac's card lists them: the pick, the alternatives, then the personal assistant. */
+		const samePlace = (a, b) => a.kind === b.kind && a.projectId === b.projectId && a.threadId === b.threadId;
+		const shotPlaces = shot => [shot.target, ...(shot.others || []), { kind: "assistant" }].filter((p, i, all) => p && all.findIndex(q => q && samePlace(p, q)) === i);
+		/**
+		 * A task link the assistants write, [任务标题](https://task.local/<线程id>): it opens that task in its own conversation,
+		 * in this tab. DSH's Markdown keeps only http(s) links (a #… link is dropped to plain text), so the address is a full
+		 * one that leads nowhere outside; the click is taken before DSH would open it. #mira-task/<id> in the address bar works too.
+		 */
+		const TASK_LINK = /^(?:#mira-task\/|https:\/\/task\.local\/)(t_[0-9a-f]{8,12})\/?$/;
+		async function openTaskLink(threadId) {
+			const state = await (await fetch(STATE_URL + "?project=", { credentials: "same-origin", cache: "no-store" })).json();
+			for (const p of state.projects || []) {
+				const thread = (p.threads || []).find(t => t.id === threadId);
+				if (thread) { openTask(p.id, thread); return true; }
+			}
+			return false;
+		}
+		const placeName = p => p.kind === "task" ? p.title : p.kind === "project" ? `「${p.title}」的讨论` : "个人助理";
+		/** Above the composer the shot landed in: the other likely places, one click each. Gone once he sends or closes it. */
+		function ShotDock({ sessionId }) {
+			const bus = useShotBus(), box = useRef(null), [busy, setBusy] = useState(false);
+			const mine = !!bus && !!sessionId && bus.sessionId === sessionId;
+			const paste = mine && bus.paste && bus.shot ? bus.paste : 0;
+			useEffect(() => {
+				if (!paste) return;
+				let gone = false;
+				(async () => {
+					let editor = null;
+					for (let i = 0; i < 40 && !gone && !editor; i++) {
+						const area = composerArea(box.current), found = area && area.querySelector('[contenteditable="true"]');
+						if (found && found.getClientRects().length) editor = found; else await sleep(150);
+					}
+					if (gone || shotBus.value?.paste !== paste) return;
+					try {
+						if (!editor) throw new Error("没找到输入框，截图没放进去");
+						await pasteShot(shotBus.value.shot, editor);
+						if (shotBus.value?.paste === paste) shotBus.set({ ...shotBus.value, paste: 0 });
+					} catch (e) { if (shotBus.value?.paste === paste) shotBus.set({ ...shotBus.value, paste: 0, error: String(e?.message || e) }); }
+				})();
+				return () => { gone = true; };
+			}, [paste]);
+			useEffect(() => {
+				if (!mine) return;
+				const done = target => { const area = composerArea(box.current); if (area && area.contains(target)) setTimeout(() => shotBus.set(null), 300); };
+				const onKey = e => { if (e.key === "Enter" && !e.shiftKey && !e.isComposing) done(e.target); };
+				const onClick = e => { const b = e.target.closest && e.target.closest("button"); if (b && /发送|send/i.test(b.getAttribute("aria-label") || b.title || "")) done(b); };
+				document.addEventListener("keydown", onKey, true); document.addEventListener("click", onClick, true);
+				return () => { document.removeEventListener("keydown", onKey, true); document.removeEventListener("click", onClick, true); };
+			}, [mine]);
+			if (!mine) return null;
+			const hold = h("span", { ref: box, hidden: true });
+			const others = bus.shot ? shotPlaces(bus.shot).filter(p => !samePlace(p, bus.here)).slice(0, 3) : [];
+			if (!bus.error && !others.length) return hold;
+			const move = async place => { setBusy(true); try { await goShot(bus.shot, place); } catch (e) { shotBus.set({ ...bus, error: String(e?.message || e) }); } finally { setBusy(false); } };
+			return h("div", { ref: box, className: "mp4-dock-notes", role: "status" },
+				h("div", { className: "mp4-dock-note" },
+					bus.error ? h("span", { className: "mp-error" }, bus.error) : others.length ? h(React.Fragment, null,
+						h("span", { className: "mp4-shot-q", title: bus.shot.why || undefined }, "不是这里？"),
+						others.map(p => h("button", { key: [p.kind, p.projectId, p.threadId].join(":"), type: "button", className: "mp4-shot-alt", disabled: busy,
+							title: p.kind === "task" ? `项目「${p.projectName}」` : undefined, onClick: () => move(p) }, placeName(p)))) : null,
+					h("button", { type: "button", className: "mp4-dock-x", title: "关掉", "aria-label": "关掉截图提示", onClick: () => shotBus.set(null) }, h(Icon, { name: "close", size: 12 }))));
+		}
 		/** The nearest ancestor of `from` that holds DSH's composer editor. */
 		function composerArea(from) {
 			for (let n = from; n && n !== document.body; n = n.parentElement) if (n.querySelector && n.querySelector('[contenteditable="true"]')) return n;
@@ -3980,7 +4223,38 @@ window.__ModuleLoader__.load({
 			if ("kind" in block && block.isError) return h(ToolLine, { icon: "close" }, "任务卡没更新");
 			return h(ToolLine, { icon: "tasks" }, ["更新了任务卡", state, args.summary].filter(Boolean).join("，"));
 		}
-		function InboxReadView() { return h(ToolLine, { icon: "inbox" }, "读了项目里的新消息"); }
+		/**
+		 * What inbox_read handed the agent, read back from the tool's own output (owner 2026-11-19: 「具体读了什么新消息，我希望也能展开看到」):
+		 * one line per item, who and where in gray, what was said in full colour. Plain words only: no ids, no markup.
+		 */
+		const INBOX_KIND = { thread_opened: "新任务", relay: "转达", decision_requested: "等你拍板", executor_changed: "换了执行者", task_returned: "任务交还", project_file: "文件更新", external_event: "外部事件", automation_triggered: "定时任务", project_configured: "项目设置改了", merge_request: "合并请求", repository_imported: "导入了仓库", thread_state: "任务状态", card_updated: "任务卡更新", card_held: "任务卡", decision_answered: "你拍了板", decision_withdrawn: "拍板作废", card_acted: "你点了卡片", card_dismissed: "你忽略了卡片", mira_requested: "整理请求", turn_failed: "唤醒失败" };
+		const inboxPlain = s => String(s || "").replace(/<shared-files>[\s\S]*?<\/shared-files>/g, "").replace(/<[^>]+>/g, " ")
+			.replace(/&quot;/g, '"').replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&amp;/g, "&").replace(/线程/g, "任务").replace(/\s+/g, " ").trim();
+		const inboxWho = name => name === "用户" ? "你" : name;
+		const inboxWhere = w => !w || w === "群聊" ? "项目对话" : /^任务「/.test(w) ? w : "一个任务";
+		function inboxItems(text) {
+			const items = [];
+			for (const m of String(text || "").matchAll(/<item\s([^>]*)>([\s\S]*?)<\/item>/g)) {
+				const a = {};
+				for (const x of m[1].matchAll(/([\w-]+)="([^"]*)"/g)) a[x[1]] = inboxPlain(x[2]);
+				const title = a.title ? `「${a.title}」` : "";
+				if (a.kind === "message") items.push({ who: `${inboxWho(a.from)}，${inboxWhere(a.where)}`, what: inboxPlain(m[2]) });
+				else if (a.kind === "thread_opened") items.push({ who: `新任务${title}`, what: inboxPlain((m[2].match(/<brief>([\s\S]*?)<\/brief>/) || [])[1]) });
+				else if (a.kind === "relay") items.push({ who: `${inboxWho(a.from)} 转达`, what: inboxPlain(m[2]) });
+				else items.push({ who: (INBOX_KIND[a.kind] || "项目动态") + (a.kind === "decision_requested" ? title : ""), what: inboxPlain(m[2]) });
+			}
+			return items;
+		}
+		function InboxReadView({ block }) {
+			const [open, setOpen] = useState(false);
+			const text = "kind" in block ? (block.content || []).filter(c => c.type === "text").map(c => c.text).join("\n") : "";
+			const items = inboxItems(text);
+			if (!items.length) return h(ToolLine, { icon: "inbox" }, /没有未读/.test(text) ? "看了项目里的消息，没有新的" : "读了项目里的新消息");
+			return h("div", { className: "mp4-inbox" },
+				h("button", { type: "button", className: "mp4-toolline mp4-inbox-head", "aria-expanded": open, onClick: () => setOpen(v => !v) },
+					h(Icon, { name: "inbox", size: 13 }), h("span", { className: "mp4-ell" }, `读了项目里的 ${items.length} 条新消息`), h("span", { className: "mp4-inbox-chev" }, h(Icon, { name: "chevron", size: 12 }))),
+				open ? h("ol", { className: "mp4-inbox-list" }, items.map((it, i) => h("li", { key: i }, h("span", { className: "mp4-inbox-who" }, it.who), it.what))) : null);
+		}
 		function PostMessageView({ block }) {
 			// While the call streams its arguments are partial JSON: read the text so far, so the reply grows like DSH's own.
 			const raw = "kind" in block ? block.call?.argsRaw : block.phase === "start" ? block.argsRaw : "";
@@ -4010,50 +4284,59 @@ window.__ModuleLoader__.load({
 		/** Radix step-9 colours the assistant can wear (same names as project colours). */
 		const LOOK_FILLS = { yellow: "#ffc53d", orange: "#f76b15", red: "#e5484d", pink: "#d6409f", purple: "#8e4ec6", blue: "#0090ff", teal: "#12a594", green: "#30a46c", gray: "#8d8d8d" };
 		const LOOK_DEFAULT = { name: "Tacit", color: "yellow", shape: "mochi", eyes: "dot", accessory: "sprout", traits: ["温和", "细心"] };
+		/**
+		 * The assistant's figure (2026-11-18): the brand's character, a round dot with pixel eyes, in the owner's colour and
+		 * eyes (the old pixel figure and its accessories are retired; shape and accessory stay in the data, unused). Below 24 px
+		 * it is the dot alone: eyes that small do not read (the brand rule).
+		 */
+		const BUDDY_FILLS = { blue: "#3964fe", purple: "#8e4ec6", teal: "#12a594", green: "#30a46c", orange: "#f76b15", pink: "#d6409f", red: "#e5484d", yellow: "#ffc53d", gray: "#8d8d8d" };
+		const BUDDY_EYES = { dot: [[4, 5, 1, 2], [9, 5, 1, 2]], big: [[3, 5, 2, 2], [9, 5, 2, 2]], sleepy: [[3, 6, 2, 1], [9, 6, 2, 1]], star: [[4, 4, 1, 3], [3, 5, 3, 1], [9, 4, 1, 3], [8, 5, 3, 1]] };
+		const BUDDY_FACES = { done: [[3, 6, 1, 1], [4, 5, 1, 1], [5, 6, 1, 1], [8, 6, 1, 1], [9, 5, 1, 1], [10, 6, 1, 1]], sleeping: [[3, 6, 2, 1], [9, 6, 2, 1]], waiting: [[3, 5, 2, 2], [9, 5, 2, 2]] };
+		function BuddyDot({ look, size = 20, blink = false, face = null, eyesFrom = 24 }) {
+			// No look saved yet: the brand's blue (the retired figure's yellow default stays with it).
+			const L = { ...LOOK_DEFAULT, color: "blue", ...(look || {}) };
+			const fill = face === "waiting" ? BUDDY_FILLS.yellow : face === "done" ? BUDDY_FILLS.green : BUDDY_FILLS[L.color] || BUDDY_FILLS.blue;
+			const ink = fill === BUDDY_FILLS.yellow ? "#1d1d1f" : "#fff", eyes = BUDDY_FACES[face] || BUDDY_EYES[L.eyes] || BUDDY_EYES.dot;
+			return h("svg", { viewBox: "0 0 14 14", width: size, height: size, "aria-hidden": true, className: "mp4-buddy" + (blink || face === "waiting" ? " mp4-buddy-blink" : "") + (face === "working" ? " mp4-buddy-glance" : "") },
+				h("circle", { cx: 7, cy: 7, r: 7, fill }),
+				size >= eyesFrom ? h("g", { className: "mp4-buddy-eyes", fill: ink, shapeRendering: "crispEdges" }, eyes.map(([x, y, w, hh], i) => h("rect", { key: i, x, y, width: w, height: hh }))) : null);
+		}
 		const LOOK_BODIES = {
-			mochi: ["", "", ".....oooo.....", "...ooyyyyoo...", "..oyhhyyyyso..", ".oyhyyyyyyyso.", ".oyyffffffyso.", ".oyffffffffso.", ".oyffffffffso.", ".oyyffffffyso.", ".oyssssssssso.", "..oooooooooo.."],
-			round: ["", "", "....oooooo....", "...oyyyyyyo...", "..oyhhyyyyso..", ".oyhyyyyyyyso.", ".oyyffffffyso.", ".oyffffffffso.", ".oyffffffffso.", ".oyyffffffyso.", "..oyssssssso..", "...oooooooo..."],
-			block: ["", "", ".oooooooooooo.", ".oyhhyyyyyyyo.", ".oyhyyyyyyyso.", ".oyyyyyyyyyso.", ".oyffffffffso.", ".oyffffffffso.", ".oyffffffffso.", ".oyffffffffso.", ".oyssssssssso.", ".oooooooooooo."],
+			mochi: ["", "", ".....oooo.....", "...ooyyyyoo...", "..oyhhyyyyyo..", ".oyhyyyyyyyyo.", ".oyyyyyyyyyyo.", "oyyyyyyyyyyyyo", "oyyyyyyyyyyyyo", "oyyyyyyyyyyyyo", "oyssssssssssyo", ".oooooooooooo."],
+			round: ["", "", "....oooooo....", "...oyyyyyyo...", "..oyhhyyyyyo..", ".oyhyyyyyyyyo.", ".oyyyyyyyyyyo.", ".oyyyyyyyyyyo.", ".oyyyyyyyyyyo.", ".oyyyyyyyyyyo.", "..oyssssssyo..", "...oooooooo..."],
+			block: ["", "", ".oooooooooooo.", ".oyhhyyyyyyyo.", ".oyhyyyyyyyyo.", ".oyyyyyyyyyyo.", ".oyyyyyyyyyyo.", ".oyyyyyyyyyyo.", ".oyyyyyyyyyyo.", ".oyyyyyyyyyyo.", ".oyssssssssyo.", ".oooooooooooo."],
 		};
-		/** Eyes by style around column c (left eye) and c + 5 (right eye), on row 7 of the face window. */
+		/** Open eyes by style, for the working (looking at the screen: one column left) and asking faces. */
 		const LOOK_EYES = {
-			dot: c => [[7, c, "e"], [7, c + 5, "e"]],
-			big: c => [[6, c - 1, "e"], [6, c, "e"], [7, c - 1, "e"], [7, c, "e"], [6, c - 1, "W"], [6, c + 5, "e"], [6, c + 6, "e"], [7, c + 5, "e"], [7, c + 6, "e"], [6, c + 5, "W"]],
-			sleepy: c => [[7, c - 1, "e"], [7, c, "e"], [7, c + 5, "e"], [7, c + 6, "e"]],
-			star: c => [[6, c - 1, "*"], [6, c, "e"], [7, c - 1, "e"], [7, c, "e"], [6, c + 5, "*"], [6, c + 6, "e"], [7, c + 5, "e"], [7, c + 6, "e"]],
+			dot: c => [[7, c, "e"], [8, c, "e"], [7, c + 5, "e"], [8, c + 5, "e"]],
+			big: c => [[7, c, "e"], [7, c + 1, "W"], [8, c, "e"], [8, c + 1, "e"], [7, c + 4, "e"], [7, c + 5, "W"], [8, c + 4, "e"], [8, c + 5, "e"]],
+			sleepy: c => [[8, c, "e"], [8, c + 1, "e"], [8, c + 4, "e"], [8, c + 5, "e"], [7, c, "s"], [7, c + 1, "s"], [7, c + 4, "s"], [7, c + 5, "s"]],
+			star: c => [[7, c, "e"], [8, c, "e"], [7, c + 5, "e"], [8, c + 5, "e"], [6, c + 1, "W"], [6, c + 6, "W"]],
 		};
 		/** Accessories as [row, column, colour key] on the 14-wide figure; rows 0–1 sit above the head. */
 		const LOOK_ACCESSORIES = {
 			sprout: [[0, 6, "g"], [0, 8, "G"], [1, 7, "G"]],
 			bow: [[1, 9, "P"], [1, 10, "P"], [1, 12, "P"], [1, 13, "P"], [2, 9, "P"], [2, 10, "P"], [2, 11, "Q"], [2, 12, "P"], [2, 13, "P"], [3, 9, "P"], [3, 10, "P"], [3, 12, "P"], [3, 13, "P"]],
 			cap: [[0, 5, "k"], [0, 6, "k"], [0, 7, "k"], [0, 8, "k"], [1, 4, "k"], [1, 5, "k"], [1, 6, "k"], [1, 7, "k"], [1, 8, "k"], [1, 9, "k"], [2, 3, "k"], [2, 4, "k"], [2, 5, "k"], [2, 6, "k"], [2, 7, "k"], [2, 8, "k"], [2, 9, "k"], [2, 10, "k"], [2, 11, "k"], [1, 10, "u"]],
-			glasses: [[6, 3, "k"], [6, 4, "k"], [7, 2, "k"], [7, 5, "k"], [8, 3, "k"], [8, 4, "k"], [6, 9, "k"], [6, 10, "k"], [7, 8, "k"], [7, 11, "k"], [8, 9, "k"], [8, 10, "k"], [7, 6, "k"], [7, 7, "k"]],
+			glasses: [[6, 2, "W"], [6, 3, "W"], [6, 4, "W"], [6, 5, "W"], [6, 8, "W"], [6, 9, "W"], [6, 10, "W"], [6, 11, "W"], [7, 2, "W"], [7, 5, "W"], [7, 8, "W"], [7, 11, "W"], [8, 2, "W"], [8, 5, "W"], [8, 8, "W"], [8, 11, "W"], [7, 6, "W"], [7, 7, "W"], [9, 2, "W"], [9, 3, "W"], [9, 4, "W"], [9, 5, "W"], [9, 8, "W"], [9, 9, "W"], [9, 10, "W"], [9, 11, "W"]],
 			headphones: [[1, 4, "k"], [1, 5, "k"], [1, 6, "k"], [1, 7, "k"], [1, 8, "k"], [1, 9, "k"], [2, 3, "k"], [2, 10, "k"], [3, 2, "k"], [3, 11, "k"], [6, 0, "k"], [7, 0, "k"], [8, 0, "k"], [6, 13, "k"], [7, 13, "k"], [8, 13, "k"], [7, 1, "u"], [7, 12, "u"]],
 			antenna: [[0, 7, "r"], [0, 8, "r"], [1, 7, "k"], [1, 8, "r"]],
 			none: [],
 		};
 		const pxShadeOf = (hex, k) => { const n = parseInt(hex.slice(1), 16), t = k < 0 ? 0 : 255, a = Math.abs(k); return "#" + [n >> 16, (n >> 8) & 255, n & 255].map(v => Math.round(v + (t - v) * a).toString(16).padStart(2, "0")).join(""); };
-		/** Two colours mixed: a toward b by k. */
-		const pxMix = (a, b, k) => { const p = x => [parseInt(x.slice(1, 3), 16), parseInt(x.slice(3, 5), 16), parseInt(x.slice(5, 7), 16)], A = p(a), B = p(b); return "#" + A.map((v, i) => Math.round(v + (B[i] - v) * k).toString(16).padStart(2, "0")).join(""); };
-		/** The body colour the figure actually wears: the owner's colour softened toward warm white. The swatches show this too. */
-		const lookBody = color => pxMix(LOOK_FILLS[color] || LOOK_FILLS.yellow, "#fff8ef", 0.12);
-		/**
-		 * The assistant's figure on a 14 × 12 grid: a soft body in the owner's colour, a pale face window with bead eyes, a small
-		 * mouth and blush, then the accessory. Faces: "look" (working, eyes toward the screen), "ask" (waiting), "happy", "sleep".
-		 */
+		/** The assistant's figure on a 14 × 12 grid with a face: "look" (working), "ask" (waiting), "happy", "sleep". */
 		function lookCells(look, face) {
 			const L = { ...LOOK_DEFAULT, ...(look || {}) }, F = LOOK_FILLS[L.color] || LOOK_FILLS.yellow;
-			const body = lookBody(L.color);
-			const PAL = { o: pxMix(F, "#1d1a17", 0.62), y: body, h: pxMix(body, "#ffffff", 0.5), s: pxMix(body, "#2a2420", 0.2), f: pxMix(F, "#fff4e8", 0.9), e: "#2a2420", m: "#b4614f", c: "#ffadbd", W: "#ffffff", "*": "#ffb224", g: "#46a758", G: "#2a7e3b", k: "#3a3f47", u: "#0090ff", r: "#e5484d", P: "#e93d82", Q: "#ffffff" };
+			const PAL = { o: pxShadeOf(F, -0.42), y: F, h: pxShadeOf(F, 0.6), s: pxShadeOf(F, -0.16), e: "#202020", c: "#ff8fa8", W: "#ffffff", g: "#46a758", G: "#2a7e3b", k: "#3a3f47", u: "#0090ff", r: "#e5484d", P: "#e93d82", Q: "#ffffff" };
 			const at = new Map(), put = (r, c, ch) => { if (r >= 0 && r < 12 && c >= 0 && c < 14 && PAL[ch]) at.set(r * 14 + c, PAL[ch]); };
 			(LOOK_BODIES[L.shape] || LOOK_BODIES.mochi).forEach((row, r) => [...row].forEach((ch, c) => put(r, c, ch)));
 			const eyes = LOOK_EYES[L.eyes] || LOOK_EYES.dot;
-			put(8, 3, "c"); put(8, 10, "c");
-			if (face === "look") { const c = L.accessory === "glasses" ? 4 : 3; eyes(c).forEach(([r, x, ch]) => put(r, x, ch)); put(8, c + 2, "m"); put(8, c + 3, "m"); }
-			else if (face === "ask") { eyes(4).forEach(([r, x, ch]) => put(r, x, ch)); put(8, 6, "m"); put(8, 7, "m"); }
-			else if (face === "happy") { [[7, 3], [6, 4], [7, 5], [7, 8], [6, 9], [7, 10]].forEach(([r, x]) => put(r, x, "e")); put(8, 6, "m"); put(8, 7, "m"); }
-			else { [[7, 3], [7, 4], [7, 9], [7, 10]].forEach(([r, x]) => put(r, x, "e")); put(8, 6, "m"); }
-			(LOOK_ACCESSORIES[L.accessory] || []).forEach(([r, x, ch]) => put(r, x, ch));
+			if (face === "look") eyes(L.accessory === "glasses" ? 4 : 3).forEach(([r, c, ch]) => put(r, c, ch));
+			else if (face === "ask") { eyes(4).forEach(([r, c, ch]) => put(r, c, ch)); put(10, 6, "e"); put(10, 7, "e"); }
+			else if (face === "happy") [[8, 3], [7, 4], [8, 5], [8, 8], [7, 9], [8, 10]].forEach(([r, c]) => put(r, c, "e"));
+			else [[8, 3], [8, 4], [8, 9], [8, 10]].forEach(([r, c]) => put(r, c, "e"));
+			put(9, 2, "c"); put(9, 11, "c");
+			(LOOK_ACCESSORIES[L.accessory] || []).forEach(([r, c, ch]) => put(r, c, ch));
 			return at;
 		}
 		/** Mira's pixel scenes in the owner's look: 32 × 24 cells, two frames each, as [x, y, w, colour] runs. */
@@ -4134,8 +4417,13 @@ window.__ModuleLoader__.load({
 			return h("svg", { className: "mp4-scene mp4-scene-" + key, viewBox: `${center ? sceneShift([a, b]) : 0} 0 32 24`, width: 32 * scale, height: 24 * scale, shapeRendering: "crispEdges", ...(label ? { role: "img", "aria-label": label } : { "aria-hidden": true }) },
 				h("g", { className: "mp4-scene-a" }, draw(a)), h("g", { className: "mp4-scene-b" }, draw(b)));
 		}
-		/** The whole workspace's scene: a task that just finished is celebrated for 3 minutes, then running, then waiting. */
+		/**
+		 * The whole workspace's scene: a question waiting on the owner comes first (2026-11-18: a fresh delivery's green face
+		 * hid a 等你拍板 for three minutes); then a task that just finished is celebrated for 3 minutes, then running, then waiting.
+		 */
 		function workspaceScene(tasks, personalRunning, now) {
+			const asking = tasks.filter(t => !t.resolved && t.state === "blocked").length;
+			if (asking) return { state: "waiting", title: `${asking} 项等你拍板` };
 			const recent = tasks.filter(t => !t.resolved && (t.state === "review_ready" || t.state === "done") && now - (t.updatedAt || 0) < 3 * 60e3).length;
 			const running = tasks.filter(t => t.experience && t.experience.execution && t.experience.execution.active).length;
 			const waiting = tasks.filter(isWaiting).length;
@@ -4162,6 +4450,8 @@ window.__ModuleLoader__.load({
 		};
 		const DEFAULT_HOTKEY = { code: "KeyM", alt: true, meta: false, ctrl: false, shift: false };
 		const lookOf = t => ({ template: t.id, name: t.name, color: t.color, shape: t.shape, eyes: t.eyes, accessory: t.accessory, traits: [...t.traits], hotkey: { ...DEFAULT_HOTKEY }, pet: { visible: true, size: "small" } });
+		/** Where a new assistant starts: the first pixel template (Tacit), the default name, no traits picked yet. */
+		const BUDDY_START_OF = () => lookOf(LOOK_TEMPLATES[0]);
 		/** A template counts as picked when the figure is exactly its figure. */
 		const isTemplate = (look, t) => look.template === t.id || ["color", "shape", "eyes", "accessory"].every(k => look[k] === t[k]);
 		/** The template that shares the most traits with the owner's picks (the first on a tie, none when nothing is picked). */
@@ -4214,8 +4504,9 @@ window.__ModuleLoader__.load({
 
 		/** First run, or 助理设置 → 性格与快捷键: character, name and summon key, in two short steps. */
 		function LookStudio({ initial, first, onClose }) {
+			const BUDDY_START = BUDDY_START_OF();
 			// First run starts with no traits picked: the owner's choice, not ours.
-			const [draft, setDraft] = useState(() => initial ? { ...lookOf(LOOK_TEMPLATES[0]), ...initial } : { ...lookOf(LOOK_TEMPLATES[0]), traits: [] });
+			const [draft, setDraft] = useState(() => initial ? { ...BUDDY_START, ...initial } : { ...BUDDY_START, traits: [] });
 			const [step, setStep] = useState(0), [touched, setTouched] = useState(!!initial);
 			const [sentence, setSentence] = useState(""), [busy, setBusy] = useState(null), [error, setError] = useState(null), [recording, setRecording] = useState(false);
 			useEffect(() => {
@@ -4230,14 +4521,15 @@ window.__ModuleLoader__.load({
 				document.addEventListener("keydown", onKey, true);
 				return () => { studioBus.recording = false; document.removeEventListener("keydown", onKey, true); };
 			}, [recording]);
+			// Traits are only traits: picking them no longer swaps the look and the name for a template's (it renamed people's assistants).
 			const toggleTrait = t => {
 				const traits = draft.traits.includes(t) ? draft.traits.filter(x => x !== t) : draft.traits.length >= 3 ? draft.traits : [...draft.traits, t];
-				const tpl = !touched ? bestTemplate(traits) : null;
-				setDraft(d => tpl ? { ...d, ...lookOf(tpl), traits, hotkey: d.hotkey, pet: d.pet, name: d.name === (LOOK_TEMPLATES.find(x => x.id === d.template)?.name) ? tpl.name : d.name } : { ...d, traits });
+				setDraft(d => ({ ...d, traits }));
 			};
+			const setLook = patch => { setTouched(true); setDraft(d => ({ ...d, template: null, ...patch })); };
 			const generate = async () => {
 				setBusy("gen"); setError(null);
-				try { const r = await act("assistantLookDraft", { sentence }); setDraft(r.look); setTouched(true); setStep(1); }
+				try { const r = await act("assistantLookDraft", { sentence }); setDraft(d => ({ ...r.look, hotkey: d.hotkey })); setTouched(true); }
 				catch (e) { setError(e.message); } finally { setBusy(null); }
 			};
 			const save = async look => {
@@ -4248,41 +4540,80 @@ window.__ModuleLoader__.load({
 			const chip = (on, label, onClick, key) => h("button", { key: key || label, type: "button", className: "mp4-chip" + (on ? " mp4-chip-on" : ""), "aria-pressed": on, onClick }, label);
 			const steps = [
 				h("div", { key: 0, className: "mp4-studio-body" },
+					h("p", { className: "mp4-studio-q" }, "从一个样子开始"),
+					h("div", { className: "mp4-tpls" }, LOOK_TEMPLATES.map(t => h("button", { key: t.id, type: "button", className: "mp4-tpl" + (isTemplate(draft, t) ? " mp4-tpl-on" : ""), "aria-pressed": isTemplate(draft, t), title: t.name,
+						onClick: () => setLook({ template: t.id, color: t.color, shape: t.shape, eyes: t.eyes, accessory: t.accessory, name: draft.name === (LOOK_TEMPLATES.find(x => isTemplate(draft, x))?.name ?? "") ? t.name : draft.name }) },
+						h(MiraPortrait, { size: 40, look: { ...t } }), h("span", null, t.name)))),
+					h("p", { className: "mp4-studio-q" }, "颜色"),
+					h("div", { className: "mp4-swatches", role: "radiogroup", "aria-label": "颜色" }, Object.keys(LOOK_FILLS).map(c => h("button", { key: c, type: "button", role: "radio", "aria-checked": draft.color === c, "aria-label": LOOK_LABELS.color[c], title: LOOK_LABELS.color[c],
+						className: "mp4-swatch" + (draft.color === c ? " mp4-swatch-on" : ""), style: { background: LOOK_FILLS[c], color: LOOK_FILLS[c] }, onClick: () => setLook({ color: c }) }))),
+					h("div", { className: "mp4-studio-row" }, h("span", { className: "mp4-k" }, "身体"), h("div", { className: "mp4-chips" }, Object.keys(LOOK_LABELS.shape).map(k => chip(draft.shape === k, LOOK_LABELS.shape[k], () => setLook({ shape: k }), "s" + k)))),
+					h("div", { className: "mp4-studio-row" }, h("span", { className: "mp4-k" }, "眼睛"), h("div", { className: "mp4-chips" }, Object.keys(LOOK_LABELS.eyes).map(k => chip(draft.eyes === k, LOOK_LABELS.eyes[k], () => setLook({ eyes: k }), "e" + k)))),
+					h("div", { className: "mp4-studio-row" }, h("span", { className: "mp4-k" }, "配饰"), h("div", { className: "mp4-chips" }, Object.keys(LOOK_LABELS.accessory).map(k => chip(draft.accessory === k, LOOK_LABELS.accessory[k], () => setLook({ accessory: k }), "a" + k)))),
+					h("label", { className: "mp4-studio-row" }, h("span", { className: "mp4-k" }, "名字"),
+						h("input", { className: "mp4-studio-input", value: draft.name, maxLength: 12, onChange: e => setDraft(d => ({ ...d, name: e.target.value })), "aria-label": "助理的名字" }))),
+				h("div", { key: 1, className: "mp4-studio-body" },
 					h("p", { className: "mp4-studio-q" }, "它是什么性格？最多选 3 个"),
 					h("div", { className: "mp4-chips" }, LOOK_TRAIT_LIST.map(t => chip(draft.traits.includes(t), t, () => toggleTrait(t)))),
 					h("p", { className: "mp4-studio-q" }, "或者一句话描述它"),
 					h("form", { className: "mp4-studio-gen", onSubmit: e => { e.preventDefault(); if (sentence.trim()) generate(); } },
-						h("input", { value: sentence, onChange: e => setSentence(e.target.value), placeholder: "比如：安静的夜猫子，戴眼镜，说话简短", maxLength: 200, "aria-label": "一句话描述助理", disabled: busy === "gen" }),
-						h("button", { type: "submit", className: "mp4-sug", disabled: !sentence.trim() || !!busy }, busy === "gen" ? "生成中…" : "生成"))),
-				h("div", { key: 2, className: "mp4-studio-body" },
-					h("label", { className: "mp4-studio-row" }, h("span", { className: "mp4-k" }, "名字"),
-						h("input", { className: "mp4-studio-input", value: draft.name, maxLength: 12, onChange: e => setDraft(d => ({ ...d, name: e.target.value })), "aria-label": "助理的名字" })),
+						h("input", { value: sentence, onChange: e => setSentence(e.target.value), placeholder: "比如：安静的夜猫子，说话简短", maxLength: 200, "aria-label": "一句话描述助理", disabled: busy === "gen" }),
+						h("button", { type: "submit", className: "mp4-sug", disabled: !sentence.trim() || !!busy }, busy === "gen" ? "生成中…" : "生成")),
 					h("div", { className: "mp4-studio-row" }, h("span", { className: "mp4-k" }, "呼出"),
 						h("div", { className: "mp4-chips" },
 							h("button", { type: "button", className: "mp4-key" + (recording ? " mp4-key-on" : ""), onClick: () => setRecording(true) }, recording ? "按下新的组合键…" : hotkeyLabel(draft.hotkey)),
 							draft.hotkey ? h("button", { type: "button", className: "mp4-mem-link", onClick: () => setDraft(d => ({ ...d, hotkey: null })) }, "不用") : h("button", { type: "button", className: "mp4-mem-link", onClick: () => setDraft(d => ({ ...d, hotkey: { ...DEFAULT_HOTKEY } })) }, "用默认")))),
 			];
-			const titles = ["性格", "名称与快捷键"];
+			const titles = ["形象", "性格与呼出"];
 			return h("div", { className: "mp4-studio-veil", onClick: e => { if (e.target === e.currentTarget && !busy) onClose(); } },
 				h("div", { className: "mp4-studio", role: "dialog", "aria-modal": true, "aria-label": "捏一个你的助理" },
 					h("div", { className: "mp4-studio-head" },
-						h("b", null, first ? "捏一个你的助理" : "性格与快捷键"),
+						h("b", null, first ? "捏一个你的助理" : "形象与快捷键"),
 						h("div", { className: "mp4-studio-steps" }, titles.map((t, i) => h("button", { key: t, type: "button", className: "mp4-studio-step" + (i === step ? " mp4-studio-step-on" : ""), onClick: () => setStep(i) }, `${i + 1} ${t}`))),
 						h("button", { type: "button", className: "mp4-dock-x", "aria-label": "关闭", onClick: onClose, disabled: !!busy }, h(Icon, { name: "close", size: 14 }))),
 					h("div", { className: "mp4-studio-main" },
 						h("div", { className: "mp4-studio-stage" },
+							h(MiraPortrait, { look: draft, size: 112 }),
 							h("b", null, draft.name || "未命名"),
 							draft.traits.length ? h("span", { className: "mp4-muted" }, draft.traits.join("、")) : null),
 						steps[step]),
 					error ? h("p", { className: "mp-error", role: "alert" }, error) : null,
 					h("div", { className: "mp4-studio-foot" },
-						first ? h("button", { type: "button", className: "mp4-mem-link", disabled: !!busy, onClick: () => save(lookOf(LOOK_TEMPLATES[0])) }, "跳过") : h("span"),
+						first ? h("button", { type: "button", className: "mp4-mem-link", disabled: !!busy, onClick: () => save(BUDDY_START) }, "跳过") : h("span"),
 						h("span", { className: "mp4-studio-acts" },
 							step > 0 ? h("button", { type: "button", className: "mp4-sug", disabled: !!busy, onClick: () => setStep(step - 1) }, "上一步") : null,
 							step < steps.length - 1 ? h("button", { type: "button", className: "mp4-sug mp4-sug-strong", disabled: !!busy, onClick: () => setStep(step + 1) }, "下一步")
 								: h("button", { type: "button", className: "mp4-sug mp4-sug-strong", disabled: !!busy || !draft.name.trim(), onClick: () => save({ ...draft, name: draft.name.trim() }) }, busy === "save" ? "正在保存…" : "完成")))));
 		}
 		/** Shows the studio when asked, and once on first run when the assistant has no look yet. */
+		/**
+		 * The pet in the bottom-right corner (back on the owner's word, 2026-11-18 evening, after the morning's cut): the
+		 * assistant's dot, its face telling what is going on; a bubble when a decision has waited over an hour. It opens the
+		 * assistant. Hidden on the assistant's own page, and when the owner switches it off in 形象与快捷键.
+		 */
+		function MiraBall() {
+			const hash = useRoute(), onScreen = useOnScreenSession(), nav = useSnapshot(), personal = usePersonal(), today = useToday();
+			const [bubbleOff, setBubbleOff] = useState(() => { try { return window.sessionStorage.getItem("mira-projects:ball-bubble") === "off"; } catch (_) { return false; } });
+			void hash;
+			const visible = !(isHomeRoute() || (onScreen && onScreen === personal.sessionId));
+			if (personal.sessionId) assistantSessionId = personal.sessionId;
+			const pet = personal.look && personal.look.pet || { visible: true, size: "small" }, who = personal.look && personal.look.name || "个人助理";
+			const keyNow = personal.look ? personal.look.hotkey : DEFAULT_HOTKEY;
+			// The ball reserves its bottom-right corner in the right panel, so its last row is never under it.
+			useEffect(() => {
+				const root = document.documentElement;
+				if (visible && pet.visible) root.setAttribute("data-mira-ball", pet.size === "large" ? "large" : "live"); else root.removeAttribute("data-mira-ball");
+				return () => root.removeAttribute("data-mira-ball");
+			}, [visible, pet.visible, pet.size]);
+			if (!visible) return null;
+			const scene = workspaceScene(allTasks(nav).map(x => x.t), personal.status === "running", Date.now());
+			const decisions = (today.waiting?.decisions || []).filter(d => Date.now() - d.since > 60 * 60e3).sort((a, b) => a.since - b.since);
+			const bubble = !bubbleOff && decisions[0] ? `「${decisions[0].threadTitle || "一个任务"}」等你拍板，等了 ${ago(decisions[0].since)}` : null;
+			return h("div", { className: "mp4-ball-wrap" },
+				bubble ? h("div", { className: "mp4-ball-bubble" }, h("button", { type: "button", onClick: () => summon() }, bubble), h("button", { type: "button", className: "mp4-icon", "aria-label": "先不用", onClick: () => { setBubbleOff(true); try { window.sessionStorage.setItem("mira-projects:ball-bubble", "off"); } catch (_) {} } }, "×")) : null,
+				pet.visible ? h("button", { type: "button", className: "mp4-ball", "aria-label": `打开${who}`, title: `${who}：${scene.title}${keyNow ? `，${hotkeyLabel(keyNow)} 呼出` : ""}`, onClick: () => summon() },
+					h(BuddyDot, { look: personal.look, face: scene.state, size: pet.size === "large" ? 52 : 40 })) : null);
+		}
 		function LookStudioHost() {
 			const open = useStudioOpen(), personal = usePersonal(), hash = useRoute(), onScreen = useOnScreenSession();
 			const [skipped, setSkipped] = useState(() => { try { return window.sessionStorage.getItem("mira-projects:studio-later") === "1"; } catch (_) { return false; } });
@@ -4781,7 +5112,7 @@ html[data-theme="dark"] :is(.mp-page,.mp-trace-dialog,.mp-observation-dialog,.mp
 :root{--rx-gray-1:#fcfcfc;--rx-gray-2:#f9f9f9;--rx-gray-3:#f0f0f0;--rx-gray-4:#e8e8e8;--rx-gray-5:#e0e0e0;--rx-gray-6:#d9d9d9;--rx-gray-7:#cecece;--rx-gray-8:#bbbbbb;--rx-gray-9:#8d8d8d;--rx-gray-10:#838383;--rx-gray-11:#646464;--rx-gray-12:#202020;--rx-blue-3:#e6f4fe;--rx-blue-6:#acd8fc;--rx-blue-9:#0090ff;--rx-blue-11:#0d74ce;--rx-green-3:#e6f6eb;--rx-green-6:#adddc0;--rx-green-9:#30a46c;--rx-green-11:#218358;--rx-red-3:#feebec;--rx-red-6:#fdbdbe;--rx-red-9:#e5484d;--rx-red-11:#ce2c31;--rx-orange-3:#ffefd6;--rx-orange-6:#ffc182;--rx-orange-9:#f76b15;--rx-orange-11:#cc4e00;--rx-amber-3:#fff7c2;--rx-amber-6:#f3d673;--rx-amber-9:#ffc53d;--rx-amber-11:#ab6400;--rx-yellow-11:#9e6c00;--rx-teal-3:#e0f8f3;--rx-teal-6:#a1ded2;--rx-teal-9:#12a594;--rx-teal-11:#008573;--rx-purple-3:#f7edfe;--rx-purple-6:#e0c4f4;--rx-purple-9:#8e4ec6;--rx-purple-11:#8145b5;--rx-pink-3:#fee9f5;--rx-pink-6:#efbfdd;--rx-pink-9:#d6409f;--rx-pink-11:#c2298a;--rx-violet-3:#f4f0fe;--rx-violet-6:#d4cafe;--rx-violet-9:#6e56cf;--rx-violet-11:#6550b9}
 @media (prefers-color-scheme:dark){html:not([data-theme="light"]){--rx-gray-1:#111111;--rx-gray-2:#191919;--rx-gray-3:#222222;--rx-gray-4:#2a2a2a;--rx-gray-5:#313131;--rx-gray-6:#3a3a3a;--rx-gray-7:#484848;--rx-gray-8:#606060;--rx-gray-9:#6e6e6e;--rx-gray-10:#7b7b7b;--rx-gray-11:#b4b4b4;--rx-gray-12:#eeeeee;--rx-blue-3:#0d2847;--rx-blue-6:#104d87;--rx-blue-9:#0090ff;--rx-blue-11:#70b8ff;--rx-green-3:#132d21;--rx-green-6:#20573e;--rx-green-9:#30a46c;--rx-green-11:#3dd68c;--rx-red-3:#3b1219;--rx-red-6:#72232d;--rx-red-9:#e5484d;--rx-red-11:#ff9592;--rx-orange-3:#331e0b;--rx-orange-6:#66350c;--rx-orange-9:#f76b15;--rx-orange-11:#ffa057;--rx-amber-3:#302008;--rx-amber-6:#5c3d05;--rx-amber-9:#ffc53d;--rx-amber-11:#ffca16;--rx-yellow-11:#f5e147;--rx-teal-3:#0d2d2a;--rx-teal-6:#145750;--rx-teal-9:#12a594;--rx-teal-11:#0bd8b6;--rx-purple-3:#301c3b;--rx-purple-6:#54346b;--rx-purple-9:#8e4ec6;--rx-purple-11:#d19dff;--rx-pink-3:#37172f;--rx-pink-6:#692955;--rx-pink-9:#d6409f;--rx-pink-11:#ff8dcc;--rx-violet-3:#291f43;--rx-violet-6:#473876;--rx-violet-9:#6e56cf;--rx-violet-11:#baa7ff}}
 html[data-theme="dark"],html.dark{--rx-gray-1:#111111;--rx-gray-2:#191919;--rx-gray-3:#222222;--rx-gray-4:#2a2a2a;--rx-gray-5:#313131;--rx-gray-6:#3a3a3a;--rx-gray-7:#484848;--rx-gray-8:#606060;--rx-gray-9:#6e6e6e;--rx-gray-10:#7b7b7b;--rx-gray-11:#b4b4b4;--rx-gray-12:#eeeeee;--rx-blue-3:#0d2847;--rx-blue-6:#104d87;--rx-blue-9:#0090ff;--rx-blue-11:#70b8ff;--rx-green-3:#132d21;--rx-green-6:#20573e;--rx-green-9:#30a46c;--rx-green-11:#3dd68c;--rx-red-3:#3b1219;--rx-red-6:#72232d;--rx-red-9:#e5484d;--rx-red-11:#ff9592;--rx-orange-3:#331e0b;--rx-orange-6:#66350c;--rx-orange-9:#f76b15;--rx-orange-11:#ffa057;--rx-amber-3:#302008;--rx-amber-6:#5c3d05;--rx-amber-9:#ffc53d;--rx-amber-11:#ffca16;--rx-yellow-11:#f5e147;--rx-teal-3:#0d2d2a;--rx-teal-6:#145750;--rx-teal-9:#12a594;--rx-teal-11:#0bd8b6;--rx-purple-3:#301c3b;--rx-purple-6:#54346b;--rx-purple-9:#8e4ec6;--rx-purple-11:#d19dff;--rx-pink-3:#37172f;--rx-pink-6:#692955;--rx-pink-9:#d6409f;--rx-pink-11:#ff8dcc;--rx-violet-3:#291f43;--rx-violet-6:#473876;--rx-violet-9:#6e56cf;--rx-violet-11:#baa7ff}
-.mp4-frame,.mp4-index,.mp4-tabpane,.mp4-ask,.mp4-toolline,.mp4-trig,.mp4-posted,.mp4-sugs,.mp4-dock-asks,.mp4-dock-notes,.mp4-filepane,.mp4-crumb,.mp4-studio-veil{--mp4-fg:var(--rx-gray-12);--mp4-fg2:var(--rx-gray-11);--mp4-fg3:var(--rx-gray-11);--mp4-hair:var(--dsw-alias-border-l2,rgba(0,0,0,.08));--mp4-hair2:var(--dsw-alias-border-l1,rgba(0,0,0,.12));--mp4-bg:var(--dsw-alias-bg-base,#FFFFFF);--mp4-fill:var(--dsw-alias-bg-secondary,var(--rx-gray-2));--mp4-hover:var(--dsw-alias-interactive-bg-hover,rgba(38,49,72,.06));--mp4-on:var(--dsw-alias-interactive-bg-active,rgba(38,49,72,.1));font-family:var(--dsw-font-family,-apple-system,"PingFang SC",sans-serif);color:var(--mp4-fg)}
+.mp4-frame,.mp4-index,.mp4-tabpane,.mp4-ask,.mp4-toolline,.mp4-inbox,.mp4-trig,.mp4-posted,.mp4-ball-wrap,.mp4-sugs,.mp4-dock-asks,.mp4-dock-notes,.mp4-filepane,.mp4-crumb,.mp4-studio-veil{--mp4-fg:var(--rx-gray-12);--mp4-fg2:var(--rx-gray-11);--mp4-fg3:var(--rx-gray-11);--mp4-hair:var(--dsw-alias-border-l2,rgba(0,0,0,.08));--mp4-hair2:var(--dsw-alias-border-l1,rgba(0,0,0,.12));--mp4-bg:var(--dsw-alias-bg-base,#FFFFFF);--mp4-fill:var(--dsw-alias-bg-secondary,var(--rx-gray-2));--mp4-hover:var(--dsw-alias-interactive-bg-hover,rgba(38,49,72,.06));--mp4-on:var(--dsw-alias-interactive-bg-active,rgba(38,49,72,.1));font-family:var(--dsw-font-family,-apple-system,"PingFang SC",sans-serif);color:var(--mp4-fg)}
 .mp4-frame{display:flex;flex-direction:row;width:100%;height:100%;min-height:0;background:var(--mp4-bg)}
 .mp4-main{flex:1 1 auto;min-width:0;display:flex;flex-direction:column;min-height:0}
 .mp4-head{flex:none;height:52px;display:flex;align-items:center;gap:10px;padding:0 20px;border-bottom:.5px solid var(--mp4-hair)}
@@ -4812,7 +5143,8 @@ html[data-theme="dark"],html.dark{--rx-gray-1:#111111;--rx-gray-2:#191919;--rx-g
 .mp4-sugs{display:flex;gap:6px;flex-wrap:wrap}
 /* Above the composer the row sits in DSH's composer seat, whose fade is still see-through at its top: give it its own solid ground. DSH caps the composer card's width and centres it, so the side inset follows the card (16px only when the column is narrower than the cap); a fixed 16px left the row at the far left on a wide window. */
 .mp4-dock-notes{display:flex;flex-direction:column;gap:2px;padding:10px max(var(--dsh-composer-side-clearance,16px),calc((100% - var(--dsh-composer-card-max-width,712px))/2)) 2px;background:linear-gradient(to bottom,transparent,var(--mp4-bg) 10px);font-size:12px;line-height:1.6;color:var(--mp4-fg2)}
-.mp4-dock-note{display:flex;align-items:center;gap:4px;min-width:0}.mp4-dock-note-text{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.mp4-dock-note .mp4-mem-link{flex:none}
+.mp4-dock-note{display:flex;align-items:center;gap:4px;min-width:0}
+.mp4-shot-q{flex:none;margin-right:4px}.mp4-shot-alt{all:unset;box-sizing:border-box;cursor:pointer;min-width:0;max-width:240px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;padding:0 8px;height:22px;line-height:22px;border:.5px solid var(--mp4-hair2);border-radius:6px;color:var(--mp4-fg);background:var(--mp4-bg);transition:background 250ms ease-out}.mp4-shot-alt:hover{background:var(--mp4-hover)}.mp4-shot-alt:focus-visible{outline:2px solid var(--mp4-fg3);outline-offset:1px}.mp4-dock-note .mp4-dock-x{margin-left:auto}.mp4-dock-note-text{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.mp4-dock-note .mp4-mem-link{flex:none}
 .mp4-dock-sugs{padding:12px max(var(--dsh-composer-side-clearance,16px),calc((100% - var(--dsh-composer-card-max-width,712px))/2)) 8px;background:linear-gradient(to bottom,transparent,var(--mp4-bg) 12px)}
 .mp4-dock-sugs .mp4-sug{background:var(--mp4-bg)}.mp4-dock-sugs .mp4-sug:hover{background:linear-gradient(var(--mp4-hover),var(--mp4-hover)),var(--mp4-bg)}
 .mp4-sug{all:unset;box-sizing:border-box;cursor:pointer;font-size:13px;line-height:20px;padding:5px 12px;border-radius:999px;border:.5px solid var(--mp4-hair2);color:var(--mp4-fg)}.mp4-sug:hover{background:var(--mp4-hover)}.mp4-sug:disabled{opacity:.5;cursor:default}.mp4-sug-on{border-color:var(--mp4-fg2);background:var(--mp4-fill);font-weight:500}
@@ -5016,6 +5348,7 @@ button.mp4-dock-note-text{all:unset;box-sizing:border-box;cursor:pointer;min-wid
 .mp4-tline time{font-size:12px;line-height:18px;color:var(--mp4-fg3);white-space:nowrap}.mp4-tline-more{margin-bottom:4px;font-size:12px}.mp4-says{margin:0;font-size:13px;line-height:20px;color:var(--mp4-fg);overflow-wrap:anywhere}
 .mp4-clampbox{display:flex;flex-direction:column;align-items:flex-start;min-width:0}.mp4-clamp{display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:3;overflow:hidden}.mp4-clamp-more{margin-top:2px;font-size:12px;line-height:18px}
 .mp4-dfile{border:.5px solid var(--mp4-hair2);border-radius:8px;overflow:hidden}.mp4-dfile+.mp4-dfile{margin-top:8px}.mp4-dfile-row{display:flex;align-items:center}
+.mp4-doc{display:flex;flex-direction:column;height:100%;min-height:0}.mp4-doc-bar{flex:none;display:flex;align-items:center;gap:8px;padding:8px 12px 8px 16px;border-bottom:.5px solid var(--mp4-hair)}.mp4-doc-meta{flex:1;min-width:0;font-size:12px;color:var(--mp4-fg2)}.mp4-doc-bar .mp4-dfile-dl{margin-right:0}.mp4-doc-body{flex:1;min-height:0;overflow:auto;padding:20px 24px 40px}.mp4-doc-body .mp4-dfile-md{max-width:760px;margin:0 auto;font-size:14px;line-height:24px}.mp4-doc-body-wide{padding:0}.mp4-doc-body-wide .mp4-dfile-frame{height:100%;min-height:520px}
 .mp4-dfile-main{all:unset;box-sizing:border-box;flex:1;min-width:0;display:flex;align-items:center;gap:10px;padding:8px 12px;cursor:pointer;color:var(--mp4-fg2)}.mp4-dfile-main:hover{background:var(--mp4-hover)}.mp4-dfile-main[disabled]{cursor:default;background:none}
 .mp4-dfile-text{display:flex;flex-direction:column;min-width:0}.mp4-dfile-text b{font-size:13px;line-height:20px;font-weight:500;color:var(--mp4-fg)}.mp4-dfile-text>span{font-size:12px;line-height:18px;color:var(--mp4-fg3)}
 .mp4-dfile-dl{flex:none;display:inline-flex;align-items:center;justify-content:center;width:32px;height:32px;margin-right:4px;border-radius:6px;color:var(--mp4-fg2)}.mp4-dfile-dl:hover{background:var(--mp4-hover);color:var(--mp4-fg)}
@@ -5031,6 +5364,48 @@ button.mp4-dock-note-text{all:unset;box-sizing:border-box;cursor:pointer;min-wid
 .mp4-studio-step{all:unset;cursor:pointer;padding:2px 8px;border-radius:6px;font-size:12px;color:var(--mp4-fg3);line-height:18px}.mp4-studio-step-on{background:var(--rx-gray-3);color:var(--mp4-fg)}
 .mp4-studio-main{display:flex;gap:16px;align-items:flex-start;flex-wrap:wrap}
 .mp4-studio-stage{flex:none;width:176px;display:flex;flex-direction:column;align-items:center;gap:4px;padding:8px;border-radius:8px;background:var(--rx-gray-2)}.mp4-studio-stage .mp4-scene{width:160px;height:120px}.mp4-studio-stage>span{font-size:12px;text-align:center;line-height:18px}
+.mp4-studio-stage{gap:8px;padding:20px 8px 16px}.mp4-studio-stage>b{font-size:14px;line-height:20px}
+.mp4-swatches{display:flex;flex-wrap:wrap;gap:8px}.mp4-swatch{all:unset;box-sizing:border-box;cursor:pointer;width:24px;height:24px;border-radius:50%;box-shadow:0 0 0 .5px rgba(0,0,0,.12);transition:box-shadow 250ms ease-out}.mp4-swatch-on{box-shadow:0 0 0 2px var(--rx-gray-1,#fff),0 0 0 3.5px currentColor}.mp4-swatch:focus-visible{outline:2px solid var(--rx-gray-8);outline-offset:3px}
+.mp4-entry-dot{display:inline-grid;place-items:center;flex:none}
+.mp4-head-avatar{display:inline-flex;align-items:center;margin-right:8px}.mp4-portrait{display:block;flex:none}
+/* A task link opens the task here, not a web page: no globe in front of it. */
+a[href^="https://task.local/"]>svg:first-child{display:none}
+.mp4-bd,.mp4-tabpane-canvas,.mp4-panel-body:has(>.mp4-bd){--mp4-canvas:color-mix(in srgb,var(--rx-gray-2) 50%,var(--rx-gray-3));--mp4-card:var(--mp4-bg)}.mp4-tabpane-canvas,.mp4-panel-body:has(>.mp4-bd){background:var(--mp4-canvas)}
+@media (prefers-color-scheme:dark){html:not([data-theme="light"]) :is(.mp4-bd,.mp4-tabpane-canvas,.mp4-panel-body:has(>.mp4-bd)){--mp4-canvas:var(--rx-gray-1);--mp4-card:var(--rx-gray-3)}}html[data-theme="dark"] :is(.mp4-bd,.mp4-tabpane-canvas,.mp4-panel-body:has(>.mp4-bd)),html.dark :is(.mp4-bd,.mp4-tabpane-canvas,.mp4-panel-body:has(>.mp4-bd)){--mp4-canvas:var(--rx-gray-1);--mp4-card:var(--rx-gray-3)}
+.mp4-bd{display:flex;flex-direction:column;gap:24px;padding:4px 0 24px;color:var(--mp4-fg);background:var(--mp4-canvas)}
+.mp4-bd-sec{display:flex;flex-direction:column;gap:12px}
+.mp4-bd-head{display:flex;align-items:center;gap:8px;padding:0 4px}.mp4-bd-head>b{font-size:16px;line-height:24px;font-weight:600}.mp4-bd-count{margin-left:auto;font-size:14px;line-height:22px;color:var(--mp4-fg2)}.mp4-bd-head .mp4-kb-tool{margin-left:4px}
+.mp4-bd-proj,.mp4-bd-card{background:var(--mp4-card);border-radius:12px}.mp4-bd-proj{padding:16px}.mp4-bd-card{padding:4px}
+.mp4-bd-proj-h{all:unset;box-sizing:border-box;cursor:pointer;display:flex;align-items:center;gap:8px;width:100%;margin-bottom:6px}.mp4-bd-proj-h>b{flex:1;min-width:0;font-size:14px;line-height:22px;font-weight:600}.mp4-bd-proj-h time,.mp4-bd-row time,.mp4-bd-msg time{flex:none;font-size:14px;line-height:22px;color:var(--mp4-fg2)}.mp4-bd-proj-h:hover>b{text-decoration:underline;text-underline-offset:3px;text-decoration-thickness:.5px}
+.mp4-bd-story{margin:0 0 0 24px;font-size:14px;line-height:22px;color:var(--mp4-fg)}
+.mp4-bd-rows{display:flex;flex-direction:column;margin:10px -12px -12px}
+.mp4-bd-row{all:unset;box-sizing:border-box;cursor:pointer;display:flex;align-items:center;gap:8px;width:100%;padding:8px 12px;border-radius:8px;font-size:14px;line-height:22px;transition:background 250ms ease-out}.mp4-bd-row:hover,.mp4-bd-msg:hover,.mp4-bd-more:hover{background:var(--mp4-hover)}
+.mp4-bd-verb{flex:none;color:var(--mp4-fg2)}.mp4-bd-line{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.mp4-bd-more{all:unset;box-sizing:border-box;cursor:pointer;display:block;width:100%;padding:8px 12px 8px 36px;border-radius:8px;font-size:14px;line-height:22px;color:var(--mp4-fg2);transition:background 250ms ease-out}.mp4-bd-more:hover{color:var(--mp4-fg)}
+.mp4-bd-msg{position:relative;display:flex;align-items:flex-start;gap:8px;padding:12px;border-radius:8px;cursor:pointer;transition:background 250ms ease-out}
+.mp4-bd-msg-ic{flex:none;width:16px;height:22px;display:grid;place-items:center}
+.mp4-kanban-rows{margin:8px 4px 0;padding-top:12px;border-top:.5px solid var(--mp4-hair2)}.mp4-kanban-row{display:flex;align-items:baseline;gap:8px;padding:4px 0;font-size:14px;line-height:22px}.mp4-kanban-lane{flex:none;color:var(--mp4-fg2)}.mp4-kanban-item{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.mp4-kanban-row-acts{flex:none;margin-left:auto;display:flex;gap:12px}.mp4-kanban-row .mp4-link-btn{padding:0;font-size:14px;line-height:22px}
+.mp4-bd-msg-b{flex:1;min-width:0;display:flex;flex-direction:column}.mp4-bd-msg-b>b{font-size:14px;line-height:22px;font-weight:500}.mp4-bd-msg-b>span{font-size:14px;line-height:22px;color:var(--mp4-fg2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.mp4-bd-msg:hover>time{visibility:hidden}.mp4-bd-msg>.mp4-kb-x{opacity:0}.mp4-bd-msg:hover>.mp4-kb-x,.mp4-bd-msg>.mp4-kb-x:focus-visible{opacity:1}
+.mp4-bd-msg>.mp4-kb-x{top:12px;right:12px;background:var(--mp4-card)}
+.mp4-buddy{display:block;flex:none}.mp4-buddy-blink .mp4-buddy-eyes{transform-box:fill-box;transform-origin:center;animation:mp4-buddy-blink 4.2s steps(1) infinite}
+@keyframes mp4-buddy-blink{0%,93%,100%{transform:scaleY(1)}95%{transform:scaleY(.1)}}
+.mp4-buddy-glance .mp4-buddy-eyes{animation:mp4-buddy-glance 2.4s steps(1) infinite}
+@keyframes mp4-buddy-glance{0%,100%{transform:translateX(0)}25%{transform:translateX(1px)}50%{transform:translateX(0)}75%{transform:translateX(-1px)}}
+@media (prefers-reduced-motion:reduce){.mp4-buddy-blink .mp4-buddy-eyes,.mp4-buddy-glance .mp4-buddy-eyes{animation:none}}
+html[data-mira-ball=large]{--mira-pet-room:136px}
+/* the pet: opens the assistant */
+.mp4-ball-wrap{position:fixed;right:22px;bottom:22px;z-index:40;display:flex;flex-direction:column;align-items:flex-end;gap:10px;pointer-events:none}
+/* DSH's overlay layer turns pointer events off for everything inside it; the pet and its bubble take them back. */
+.mp4-ball-wrap>*,.mp4-ball-wrap>* *{pointer-events:auto!important}
+.mp4-ball{all:unset;cursor:pointer;position:relative;display:inline-flex;align-items:center;justify-content:center;border-radius:50%;filter:drop-shadow(0 6px 12px rgba(0,0,0,.18));transition:transform 250ms ease-out}.mp4-ball:focus-visible{outline:2px solid var(--mp4-fg3);outline-offset:2px}
+.mp4-ball:hover{transform:translateY(-1px)}
+.mp4-ball-bubble{max-width:300px;display:flex;align-items:flex-start;gap:4px;background:var(--rx-gray-1,#FFFFFF);color:var(--mp4-fg);border-radius:8px;box-shadow:0 0 0 .5px rgba(0,0,0,.1),0 12px 32px -12px rgba(0,0,0,.3);padding:8px 6px 8px 12px;font-size:13px;line-height:1.6}
+.mp4-ball-bubble>button:first-child{all:unset;cursor:pointer;flex:1}
+/* While the pet is on screen it owns the bottom-right corner of the right panel: end the tab's scroll
+   area above it, so no row can ever slide under it (padding alone still lets content scroll past). */
+html[data-mira-ball] .mp4-tabpane{height:max(0px,calc(100% - var(--mira-pet-room,112px)));-webkit-mask-image:linear-gradient(to bottom,#000 calc(100% - 22px),transparent);mask-image:linear-gradient(to bottom,#000 calc(100% - 22px),transparent)}
+html[data-mira-ball] .mp4-panel-body{margin-bottom:var(--mira-pet-room,112px);-webkit-mask-image:linear-gradient(to bottom,#000 calc(100% - 22px),transparent);mask-image:linear-gradient(to bottom,#000 calc(100% - 22px),transparent)}
 .mp4-studio-body{flex:1;min-width:260px;display:flex;flex-direction:column;gap:10px}.mp4-studio-q{margin:0;color:var(--mp4-fg2)}
 .mp4-studio-row{display:grid;grid-template-columns:40px minmax(0,1fr);gap:8px;align-items:center}.mp4-studio-row .mp4-k{font-weight:400;margin:0}
 .mp4-chips{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
@@ -5081,6 +5456,8 @@ button.mp4-dock-note-text{all:unset;box-sizing:border-box;cursor:pointer;min-wid
 .mp4-tabpane{padding:14px 16px 24px;display:flex;flex-direction:column;gap:14px;font-size:13px;line-height:20px;height:100%;overflow:auto;box-sizing:border-box}
 .mp4-tab-title{margin:0;font-size:18px;line-height:26px;font-weight:600}
 .mp4-toolline{display:flex;align-items:center;gap:6px;font-size:13px;line-height:20px;color:var(--mp4-fg3);min-width:0}
+.mp4-inbox-head{background:none;border:0;padding:0;margin:0;cursor:pointer;font-family:inherit;text-align:left;max-width:100%;transition:color 250ms ease-out}.mp4-inbox-head:hover{color:var(--mp4-fg)}.mp4-inbox-chev{flex:none;display:inline-flex;transition:transform 250ms ease-out}.mp4-inbox-head[aria-expanded="true"] .mp4-inbox-chev{transform:rotate(90deg)}
+.mp4-inbox-list{list-style:none;margin:6px 0 2px 6px;padding:0 0 0 13px;border-left:.5px solid var(--mp4-hair2);display:flex;flex-direction:column;gap:6px;font-size:13px;line-height:20px;color:var(--mp4-fg)}.mp4-inbox-list>li{display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}.mp4-inbox-who{color:var(--mp4-fg2);margin-right:8px}
 .mp4-posted{font-size:14px;line-height:1.75;padding:2px 0}
 .mp4-ask{border:.5px solid var(--mp4-hair2);border-radius:8px;padding:12px;display:flex;flex-direction:column;gap:8px;max-width:560px;font-size:14px;background:var(--mp4-bg);line-height:22px}
 .mp4-ask-done{border-color:var(--mp4-hair);font-size:13px;color:var(--mp4-fg2);display:block;line-height:20px}
@@ -5250,12 +5627,28 @@ div:has(> [data-slot="sidebar.right.tab.guide.entry"] [data-mira-guide-skip]){di
 			tabType(CHANGES_TAB_ID, CHANGES_TAB_KIND, "交付", { id: "mira-changes", order: 6, description: () => "改了什么、检查结果、MR" }, "task");
 			tabType(AGENTS_TAB_ID, AGENTS_TAB_KIND, "并行执行", { id: "mira-agents", order: 7, description: () => "主会话派出的子智能体" }, "task");
 			tabBody(TASK_TAB_ID, TaskTab); tabBody(CHANGES_TAB_ID, ChangesTab); tabBody(AGENTS_TAB_ID, AgentsTab);
+			// A delivered file in its own tab: a resource type (its address names the file), not a guide card.
+			ctx.effect(() => ctx.sidebarRightTabs.register({ id: DOC_TAB_ID, kind: DOC_TAB_KIND, patterns: [DOC_PREFIX + "**"], priority: "builtin", canOpen: a => !!docOf(a), title: a => docOf(a)?.name || "文件" }), "mira-projects: document tab type");
+			tabBody(DOC_TAB_ID, DocTab);
 			// Inside Mira's own Session: her overviews and settings as DSH right-panel tabs, suggested lines above her composer.
 			for (const tab of MIRA_TABS) { tabType(tab.id, tab.kind, tab.title, { id: tab.id, order: tab.order, description: () => tab.desc }, tab.quiet ? "quiet" : "mira"); tabBody(tab.id, tab.body); }
 			ctx.effect(() => ctx.slots.inject("conversation.input.dock", () => ctx.slots.register({ name: "conversation.input.dock", id: "mira-suggestions", order: 5, locale: NS, inject: (sessionId) => ({ sessionId }) }, MiraSuggestions)), "mira-projects: Mira suggestions");
 			// Inside a task: what it waits on the owner to decide, above the composer.
 			ctx.effect(() => ctx.slots.inject("conversation.input.dock", () => ctx.slots.register({ name: "conversation.input.dock", id: "mira-task-decisions", order: 4, locale: NS, inject: (sessionId) => ({ sessionId }) }, TaskDecisionDock)), "mira-projects: task decisions");
 			ctx.effect(() => ctx.slots.inject("conversation.input.dock", () => ctx.slots.register({ name: "conversation.input.dock", id: "mira-task-elsewhere", order: 3.5, locale: NS, inject: (sessionId) => ({ sessionId }) }, TaskElsewhereDock)), "mira-projects: task elsewhere");
+			ctx.effect(() => ctx.slots.inject("conversation.input.dock", () => ctx.slots.register({ name: "conversation.input.dock", id: "mira-shot", order: 2, locale: NS, inject: (sessionId) => ({ sessionId }) }, ShotDock)), "mira-projects: screenshot dock");
+			ctx.effect(() => { const on = () => { void takeShot(); }; on(); window.addEventListener("hashchange", on); return () => window.removeEventListener("hashchange", on); }, "mira-projects: screenshot ask");
+			ctx.effect(() => {
+				const click = e => {
+					const a = e.target && e.target.closest && e.target.closest("a[href]"), m = a && TASK_LINK.exec(a.getAttribute("href") || "");
+					if (!m || e.button > 1) return;
+					e.preventDefault(); e.stopPropagation();
+					void openTaskLink(m[1]);
+				};
+				const typed = () => { const m = TASK_LINK.exec(window.location.hash || ""); if (!m) return; window.history.replaceState(window.history.state, "", window.location.pathname + window.location.search); void openTaskLink(m[1]); };
+				document.addEventListener("click", click, true); document.addEventListener("auxclick", click, true); window.addEventListener("hashchange", typed); typed();
+				return () => { document.removeEventListener("click", click, true); document.removeEventListener("auxclick", click, true); window.removeEventListener("hashchange", typed); };
+			}, "mira-projects: task links");
 			ctx.effect(() => ctx.slots.inject("conversation.input.dock", () => ctx.slots.register({ name: "conversation.input.dock", id: "mira-memory-notes", order: 3, locale: NS, inject: (sessionId) => ({ sessionId }) }, MiraMemoryNotes)), "mira-projects: memory notes");
 			// Beside the title of a task and of its sub-agents: up to the project, and who works on the task.
 			ctx.effect(() => ctx.slots.inject("conversation.session.header.actions", () => ctx.slots.register({ name: "conversation.session.header.actions", id: "mira-project", order: 1, locale: NS, inject: (sessionId) => ({ sessionId }) }, SessionProject)), "mira-projects: project beside the title");
@@ -5285,7 +5678,10 @@ div:has(> [data-slot="sidebar.right.tab.guide.entry"] [data-mira-guide-skip]){di
 			const views = { request_decision: DecisionToolView, update_card: UpdateCardView, inbox_read: InboxReadView, post_message: PostMessageView, message_coordinator: MessageCoordinatorView, withdraw_decision: WithdrawDecisionView,
 				open_thread: OpenThreadView, add_member: AddMemberView, message_thread: MessageThreadView, list_threads: ListThreadsView, read_thread: ReadThreadView, no_reply: NoReplyView };
 			for (const [tool, View] of Object.entries(views)) ctx.effect(() => ctx.slots.inject("tool.call.toolview", () => ctx.slots.register({ name: "tool.call.toolview", key: tool, locale: NS, inject: (sessionId) => ({ sessionId }) }, View)), `mira-projects: ${tool} view`);
-			// No desktop pet in the first release (the owner, 2026-11-18): the summon key below is the way in.
+			// No floating pet (the owner, 2026-11-18 night: 「右下角的悬浮球这个功能就关掉」): the pixel figure is the assistant's
+			// avatar only. MiraBall stays in the code, unregistered.
+			// The assistant's avatar at the head of its own conversation.
+			ctx.effect(() => ctx.slots.inject("conversation.session.header.actions", () => ctx.slots.register({ name: "conversation.session.header.actions", id: "mira-avatar", order: 0, locale: NS, inject: (sessionId) => ({ sessionId }) }, MiraHeaderAvatar)), "mira-projects: assistant avatar in its conversation");
 			ctx.effect(() => ctx.slots.inject("shell.overlay", () => ctx.slots.register({ name: "shell.overlay", id: "mira-studio", order: 60 }, LookStudioHost)), "mira-projects: look studio");
 			// The summon key (⌥M unless the owner picked another or none): a capture listener, as DSH's shortcut service refuses some combinations.
 			ctx.effect(() => {
@@ -5357,7 +5753,7 @@ div:has(> [data-slot="sidebar.right.tab.guide.entry"] [data-mira-guide-skip]){di
 		exports.executionRows = executionRows;
 		exports.livePosts = livePosts;
 		exports.skillDiff = skillDiff; exports.kanbanLine = kanbanLine; exports.STATUS_LOOK = STATUS_LOOK; exports.bannerOf = bannerOf; exports.timelineRows = timelineRows; exports.deliveredFiles = deliveredFiles; exports.sizeLabel = sizeLabel;
-		exports.mentionCandidates = mentionCandidates; exports.deliveryOrder = deliveryOrder; exports.titledOnly = titledOnly; exports.mentionClipboard = mentionClipboard; exports.mentionText = mentionText; exports.mentionNames = mentionNames; exports.mentionRule = mentionRule; exports.iconSpec = iconSpec; exports.modelName = modelName; exports.executorOf = executorOf; exports.shownName = shownName; exports.isProjectExecutor = isProjectExecutor; exports.taskStatus = taskStatus; exports.projectLook = projectLook; exports.layoutTimeline = layoutTimeline; exports.readWake = readWake; exports.wakeMessages = wakeMessages; exports.typedInSession = typedInSession; exports.workspaceScene = workspaceScene; exports.miraScene = miraScene; exports.sceneShift = sceneShift; exports.isTemplate = isTemplate; exports.lookCells = lookCells; exports.lookPortrait = lookPortrait; exports.bestTemplate = bestTemplate; exports.hotkeyFrom = hotkeyFrom; exports.hotkeyMatches = hotkeyMatches; exports.hotkeyLabel = hotkeyLabel; exports.LOOK_TEMPLATES = LOOK_TEMPLATES; exports.LINE_BODIES = LINE_BODIES; exports.LINE_ACCESSORIES = LINE_ACCESSORIES; exports.ICONS = ICONS; exports.PROJECT_TINTS = PROJECT_TINTS; exports.PROJECT_ICON_NAMES = PROJECT_ICON_NAMES; exports.PROJECT_ICON_SHAPES = PROJECT_ICON_SHAPES;
+		exports.mentionCandidates = mentionCandidates; exports.deliveryOrder = deliveryOrder; exports.titledOnly = titledOnly; exports.mentionClipboard = mentionClipboard; exports.mentionText = mentionText; exports.mentionNames = mentionNames; exports.mentionRule = mentionRule; exports.iconSpec = iconSpec; exports.modelName = modelName; exports.executorOf = executorOf; exports.shownName = shownName; exports.isProjectExecutor = isProjectExecutor; exports.taskStatus = taskStatus; exports.projectLook = projectLook; exports.layoutTimeline = layoutTimeline; exports.readWake = readWake; exports.wakeMessages = wakeMessages; exports.typedInSession = typedInSession; exports.workspaceScene = workspaceScene; exports.inboxItems = inboxItems; exports.miraScene = miraScene; exports.sceneShift = sceneShift; exports.isTemplate = isTemplate; exports.lookCells = lookCells; exports.lookPortrait = lookPortrait; exports.bestTemplate = bestTemplate; exports.hotkeyFrom = hotkeyFrom; exports.hotkeyMatches = hotkeyMatches; exports.hotkeyLabel = hotkeyLabel; exports.LOOK_TEMPLATES = LOOK_TEMPLATES; exports.LINE_BODIES = LINE_BODIES; exports.LINE_ACCESSORIES = LINE_ACCESSORIES; exports.ICONS = ICONS; exports.PROJECT_TINTS = PROJECT_TINTS; exports.PROJECT_ICON_NAMES = PROJECT_ICON_NAMES; exports.PROJECT_ICON_SHAPES = PROJECT_ICON_SHAPES;
 		exports.createRevisionFeed = createRevisionFeed;
 		exports.pickAsk = pickAsk; exports.inboxProjects = inboxProjects; exports.inboxNotes = inboxNotes; exports.noteAsks = noteAsks; exports.suggestionsFor = suggestionsFor; exports.panelFits = panelFits;
 		return module.exports;

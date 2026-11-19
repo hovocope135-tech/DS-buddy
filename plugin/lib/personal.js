@@ -45,14 +45,20 @@ export class PersonalMira {
     return true
   }
 
-  post({ text, requestId, typed }) {
+  /**
+   * `context`: what came with the words but is not theirs (截图来问: the screenshot's text, app and window). The assistant
+   * reads it as a reminder beside the message; it is never shown as the owner's words and never becomes memory.
+   */
+  post({ text, requestId, typed, context, via }) {
     const body = required(text, '消息'), key = requestKey(requestId)
+    const extra = typeof context === 'string' && context.trim() !== '' ? context.trim().slice(0, 8000) : undefined
     // `typed`: the part of `text` the owner typed themself (the page may add a prefix); only that part can become memory.
     const own = typeof typed === 'string' && typed.trim() !== '' && body.includes(typed.trim()) ? typed.trim() : undefined
     let event = this.hub.events.find(e => e.type === 'message.posted' && e.personalRequestId === key)
     if (event && event.text !== body) throw new Error('同一请求的重试内容不一致')
     if (!event) event = this.hubStore.append(HUB_ID, { type: 'message.posted', messageId: this.hubStore.newMessageId(),
-      personalRequestId: key, threadId: null, author: { kind: 'human', id: 'owner' }, trust: 'principal', text: body, mentions: [MIRA], to: [MIRA], ...(own ? { typed: own } : {}) })
+      personalRequestId: key, threadId: null, author: { kind: 'human', id: 'owner' }, trust: 'principal', text: body, mentions: [MIRA], to: [MIRA], ...(own ? { typed: own } : {}),
+      ...(extra ? { context: extra } : {}), ...(typeof via === 'string' && /^[a-z-]{1,20}$/.test(via) ? { via } : {}) })
     this.driver.deliver(event, 'conversation')
     return { ok: true, messageId: event.messageId }
   }

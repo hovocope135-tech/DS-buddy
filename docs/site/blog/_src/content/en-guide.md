@@ -20,7 +20,9 @@ Optional: with the Claude Code or Codex command line installed, tasks can be swi
 
 ## 2. Meet Tacit
 
-The first time, you land in the personal assistant's conversation, with Waiting on you on the right. The assistant is called Tacit by default. A small two-step window follows: pick up to three personality traits, give it a name, and set a shortcut to call it up (⌥M by default). Skip it if you like; it can be changed later under assistant settings, personality and shortcut.
+The first time, you land in the personal assistant's conversation, with Waiting on you on the right. The assistant is called Tacit by default. A small two-step window follows: shape it first (a small pixel figure: start from one of six looks, then change its colour, body, eyes and accessory, and give it a name), then pick up to three personality traits or describe it in a sentence, and a shortcut to call it up (⌥M by default). Skip it if you like; it can be changed later under assistant settings, look and shortcut.
+
+The figure is the assistant's avatar: it sits in front of Personal assistant in the left sidebar, beside the title of its conversation, and on the messages it brings to Waiting on you.
 
 Start by telling it: "Remember: I like to read the conclusion first, then the details." It goes into About you with your own words, and every conversation knows it from then on.
 
