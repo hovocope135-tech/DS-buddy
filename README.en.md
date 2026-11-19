@@ -24,8 +24,6 @@ This is the core philosophy DSH-projects is built on, and its main difference fr
 
 Left: a common multi-agent product, where context, Skills and runtime are bound into each agent. Right: DSH-projects, where one personal assistant serves many projects, each project is split into tasks along context boundaries, and the runtime is decoupled from the context and can be swapped per task. The numbers refer to the sections of the [architecture article](https://hovocope135-tech.github.io/DSH-projects/site/blog/en/deep/). The figure's labels are in Chinese.
 
-If you want to try the next generation of AI too: your next agent product doesn't need you to worry about agents.
-
 **Install DSH-projects and try it.**
 
 ## Getting started

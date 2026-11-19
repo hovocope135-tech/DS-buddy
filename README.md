@@ -24,8 +24,6 @@
 
 左：常见的多 Agent 产品，上下文、Skills 和 runtime 绑定在每个 Agent 上。右：DSH-projects，一个个人助理对应多个项目，每个项目按上下文边界拆分为多个任务；runtime 与上下文解耦，可按任务替换。标号对应[工程架构一文](https://hovocope135-tech.github.io/DSH-projects/site/blog/deep/)的章节。
 
-如果你也要体验下一代AI，你的下一个Agent产品，不需要你操心Agent！
-
 **快安装DSH-projects试试看吧!**
 
 ## 上手
