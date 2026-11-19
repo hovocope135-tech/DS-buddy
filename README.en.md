@@ -82,9 +82,9 @@ Delivered files open right in **交付** (delivery): click **验收通过** to a
 
 > 用一张可视化的图，展现我今天做了什么 (show me what I did today as a picture)
 
-![Asking for today as a picture: a text answer first, then the data goes to a project, and ten minutes later a visual page comes back (demo data)](docs/readme/ask-visual.gif)
+![Asking for today as a picture: the assistant hands it to a project, and eight minutes later a timeline picture comes back (demo data)](docs/readme/ask-visual.gif)
 
-It answers in text first; reply 「做成一页网页」 (make it a web page) and what comes back is the page in the picture.
+It hands the job to a project, and what comes back is the picture shown here.
 
 ### 5. Come back later
 

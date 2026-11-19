@@ -118,9 +118,9 @@ After that, click + on the right and choose **时间线** (timeline): that is yo
 
 > 用一张可视化的图，展现我今天做了什么 (show me what I did today as a picture)
 
-It first answers from the timeline in text. If you want the picture, reply 「做成一页网页」 (make it a web page): it hands today's data to a project, and a page you can open directly comes back.
+It hands the job to a project and first tells you what the picture will cover: which hours, which things. A few minutes later a picture you can open directly comes back.
 
-![Asking for today as a picture: a text answer first, then the data goes to a project, and ten minutes later a visual page comes back (demo data)](readme/ask-visual.gif)
+![Asking for today as a picture: the assistant hands it to a project, and eight minutes later a timeline picture comes back (demo data)](readme/ask-visual.gif)
 
 The top of the timeline also has a few ready-made questions, such as 「今天做了哪些事，各到哪一步了？」 (what did I work on today, and where does each stand?). One click asks it.
 
